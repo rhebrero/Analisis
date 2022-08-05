@@ -22,13 +22,13 @@ from SimpleTools import *
 
 
 #Samples to process
-samplesDir = '/afs/hephy.at/work/a/aescalante/cmssw/SimpleGen/'
+samplesDir = '/afs/cern.ch/work/e/escalant/private/Displaced2021/CMSSW_12_0_2_patch1/src/'
 
 samples = Sample()
 
-samples.AddSample(samplesDir+'EXO-RunIIFall17GS_HTo2LongLivedTo4mu_MH-200_MFF-50_CTau-200mm_TuneCUETP8M1_13TeV_pythia8_1.root', 'M_{H}=200, M_{X}=50, c#tau=20cm', '200_50_CTau_20cm', 2)
-samples.AddSample(samplesDir+'EXO-RunIIFall17GS_HTo2LongLivedTo4mu_MH-125_MFF-20_CTau-1300mm_TuneCUETP8M1_13TeV_pythia8_1.root', 'M_{H}=125, M_{X}=20, c#tau=130cm', '125_20_CTau_130cm', 3)
-samples.AddSample(samplesDir+'EXO-RunIIFall17GS_HTo2LongLivedTo4mu_MH-400_MFF-150_CTau-40mm_TuneCUETP8M1_13TeV_pythia8_1.root', 'M_{H}=400, M_{X}=150, c#tau=4cm', '400_150_CTau_4cm', 1) # last integer is the color
+samples.AddSample(samplesDir+'TSG-Run3Summer21DRPremix-HTo2LongLivedTo2mu2jets_MH-125_MFF-20_CTau-130mm_TuneCP5_13TeV_pythia8.root'  , 'M_{H}=125, M_{X}=20, c#tau=130cm'  , '125_20_CTau_130cm', 2)
+samples.AddSample(samplesDir+'TSG-Run3Summer21DRPremix-HTo2LongLivedTo2mu2jets_MH-125_MFF-20_CTau-1300mm_TuneCP5_13TeV_pythia8.root' , 'M_{H}=125, M_{X}=20, c#tau=130cm'  , '125_20_CTau_1300cm', 3)
+samples.AddSample(samplesDir+'TSG-Run3Summer21DRPremix-HTo2LongLivedTo2mu2jets_MH-125_MFF-20_CTau-13000mm_TuneCP5_13TeV_pythia8.root', 'M_{H}=125, M_{X}=20, c#tau=13000cm', '125_20_CTau_13000cm', 1) # last integer is the color
 
 sampleName = samples.GetSampleName()
 legendName = samples.GetLegendName()
@@ -38,6 +38,10 @@ histName = samples.GetHistName()
 handlePruned  = Handle ("std::vector<reco::GenParticle>")
 labelPruned = ("genParticles")
 
+handleTriggerBits = Handle("edm::TriggerResults")                                                                                                                                                                                                                                                                                                                                                                          
+#labelTriggerBits = ("TriggerResults","","HLT") set my label.
+labelTriggerBits = ("TriggerResults","","HLT") 
+TriggerFlags = ["HLT_TrkMu15_DoubleTrkMu5NoFiltersNoVtx_v2", "HLT_DoubleMu38NoFiltersNoVtx_v2", "HLT_L2DoubleMu28_NoVertex_2Cha_Angle2p5_Mass10_v2", "DST_DoubleMu3_Mass10_PFScouting_v1", "HLT_L2DoubleMu23_NoVertex_v2"]
 
 #Histograms
 massHiggs = createSimple1DPlot("massHiggs", "M_{H}", 100, 100, 600, samples)
@@ -46,11 +50,15 @@ lxy = createSimple1DPlot("lxy", "lxy", 100, 1, 100, samples)
 lzVslxy = createSimple2DPlot("lzVslxy", "lz vs lxy", 350, 0, 1000, 200, 0, 700, samples)
 
 for index, ksamples in enumerate(sampleName):
-    print "SAMPLE: "+ksamples+"\n"
+    print ("SAMPLE: "+ksamples+"\n")
     events = Events(ksamples)    
     for i,event in enumerate(events):   
         event.getByLabel (labelPruned, handlePruned)
         genParticles = handlePruned.product()
+
+        event.getByLabel(labelTriggerBits, handleTriggerBits)                                                                                                                                                                                                                                                                                                                                                           
+        triggerBits = handleTriggerBits.product()  
+
         for p in genParticles:
             if p.isHardProcess():
                 tellMeMore(p)
@@ -62,9 +70,14 @@ for index, ksamples in enumerate(sampleName):
                     lxy[index].Fill(abs(p.vertex().rho()))
                     lzVslxy[index].Fill(abs(p.vertex().Z()), abs(p.vertex().rho()))
 
+        # Which fraction of events in the denominator that fullfill the triger                                                                                                                                                                                                                                                                                                                                       
+        HLTTriggerNames = event.object().triggerNames(triggerBits)
+        for TriggerIndex, kTrigger in enumerate(TriggerFlags):
+            for i in range(triggerBits.size()):
+                if triggerBits.accept(i):
+                    print (HLTTriggerNames.triggerName(i))
 
-
-plotsFolder = '/afs/hephy.at/work/a/aescalante/cmssw/SimpleGen/plots/'
+plotsFolder = '/afs/cern.ch/work/e/escalant/private/Displaced2021/CMSSW_12_0_2_patch1/src/plots/'
 #makeSimple1DPlot(var, canvas, samples, title, xtitle, ytitle, output, folder, logy=False, showOnly = []):
 
 makeSimple1DPlot(massHiggs, 'massHiggs', samples, '', 'M_{Higgs}', 'norm.a.u', 'massHiggs', plotsFolder, logy=False)

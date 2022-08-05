@@ -4,9 +4,32 @@ from myMathUtils import *
 from ResolutionUtils import *
 
 def tellMeMore(p):
-    print p.pdgId(), round(p.mass(), 2), round(p.pt(),2)
+    print((p.pdgId(), round(p.mass(), 2), round(p.pt(),2)))
     if p.pdgId() != 21:
-        print "  mother id : "+str(round(p.mother(0).pdgId(),2)), " mother mass: "+str(round(p.mother(0).mass(),2))
+        print(("  mother id : "+str(round(p.mother(0).pdgId(),2)), " mother mass: "+str(round(p.mother(0).mass(),2))))
+
+
+# Finds the last muons in a decay chain of a given list of muons.
+def findFinalStateMuons(prunedParticles):
+    fsmuons = []
+
+    for mu in prunedParticles:
+        muon = mu
+        #print ("Last copy?", muon.isLastCopy())
+        while (muon.isLastCopy() == False):
+            for dau in muon.daughterRefVector():
+                # Assume that there is always only one muon in the decay chain
+                if dau.pdgId() == muon.pdgId():
+                    muon = dau;
+                    break;
+
+        if muon.isLastCopy() == False:
+            print ("+++ Final state muon is not found +++")
+            break;
+        else:
+            fsmuons.append(muon)
+
+    return fsmuons
 
 def getDaugthers(prunedParticles, mother =35):
     daughtersMother = []
@@ -20,7 +43,7 @@ def getDaugthers(prunedParticles, mother =35):
         return daughtersMother
 
     else:
-        print "WTF!! \n"
+        print ("WTF!! \n")
 
 def getMothers(prunedParticles, mother1 =-1, mother2=-1):
     mothers = []
@@ -42,7 +65,7 @@ def getMothers(prunedParticles, mother1 =-1, mother2=-1):
     if len(mothers) == 1 or len(mothers) == 2:        
         return mothers
     else:
-        print "WTF!! \n"
+        print ("WTF!! \n")
 
 
 def getMotherMass(prunedParticles, mother):
@@ -197,9 +220,9 @@ def getResolution(RecoMuon, prunedParticles, EtaRange = [0, 2.4],  PtRange=[5,10
 
     resolutionParam = ResolutionParam()
     
-    if verbose == True: print 'Looking for Gen Muon'
-    if verbose == True: print EtaRange, PtRange, LxyRange, LzRange, DrRange
-    if verbose == True: print RecoMuon.pt(), RecoMuon.eta(), RecoMuon.phi()
+    if verbose == True: print ('Looking for Gen Muon')
+    if verbose == True: print((EtaRange, PtRange, LxyRange, LzRange, DrRange))
+    if verbose == True: print((RecoMuon.pt(), RecoMuon.eta(), RecoMuon.phi()))
 
     pairReco = []
     pairGen = []
@@ -233,12 +256,12 @@ def getResolution(RecoMuon, prunedParticles, EtaRange = [0, 2.4],  PtRange=[5,10
                     if deltaR(p, k) < minDeltaRGenThreshold:
                         minDeltaRGenThreshold = deltaR(p, k)
 
-            if verbose == True: print "Delta R "+str(minDeltaRGenThreshold)
+            if verbose == True: print("Delta R "+str(minDeltaRGenThreshold))
             if minDeltaRGenThreshold < DrRange[0] or minDeltaRGenThreshold > DrRange[1]:
                 continue
 
-            if verbose == True: print "#PdgId : %s  status: %s  pt : %.4s  eta : %.4s   phi : %.4s  " %(p.pdgId(),p.status(),p.pt(),p.eta(),p.phi())
-            if verbose == True: print "    -> Delta R %f"%(deltaR(RecoTrack, p))
+            if verbose == True: print("#PdgId : %s  status: %s  pt : %.4s  eta : %.4s   phi : %.4s  " %(p.pdgId(),p.status(),p.pt(),p.eta(),p.phi()))
+            if verbose == True: print("    -> Delta R %f"%(deltaR(RecoTrack, p)))
 
             if deltaR(RecoTrack, p) <minDeltaRMatchedThreshold:
                 minDeltaR = deltaR(RecoTrack, p)
@@ -249,17 +272,17 @@ def getResolution(RecoMuon, prunedParticles, EtaRange = [0, 2.4],  PtRange=[5,10
             pairReco.append(RecoTrack)
             pairGen.append(matchedGenMu[-1])
                 
-    if verbose == True: print 'found matched muons '+str(len(pairReco))
+    if verbose == True: print('found matched muons '+str(len(pairReco)))
 
 
     if len(pairGen)> 1:
 #        print 'test ----- nmuons '+str(len(pairGen))
         for kIndex in range(0, len(pairGen)):
             for jIndex in range(kIndex, len(pairGen)):
-                if verbose == True: print kIndex, jIndex
+                if verbose == True: print(kIndex, jIndex)
                 if getTrueMother(pairGen[kIndex]).pdgId() == getTrueMother(pairGen[jIndex]).pdgId() and pairGen[kIndex].pdgId() !=  pairGen[jIndex].pdgId():
-                    if verbose == True: print  kIndex, pairGen[kIndex].charge(), pairGen[kIndex].pdgId(), getTrueMother(pairGen[kIndex]).pdgId(), pairGen[kIndex].eta(), pairGen[kIndex].phi()
-                    if verbose == True: print  jIndex, pairGen[jIndex].charge(), pairGen[jIndex].pdgId(), getTrueMother(pairGen[jIndex]).pdgId(), pairGen[jIndex].eta(), pairGen[jIndex].phi()
+                    if verbose == True: print(kIndex, pairGen[kIndex].charge(), pairGen[kIndex].pdgId(), getTrueMother(pairGen[kIndex]).pdgId(), pairGen[kIndex].eta(), pairGen[kIndex].phi())
+                    if verbose == True: print(jIndex, pairGen[jIndex].charge(), pairGen[jIndex].pdgId(), getTrueMother(pairGen[jIndex]).pdgId(), pairGen[jIndex].eta(), pairGen[jIndex].phi())
 
                     recoMass = sqrt( 2*pairReco[jIndex].pt()*pairReco[kIndex].pt()*(cosh(pairReco[jIndex].eta()-pairReco[kIndex].eta())-cos(deltaPhi(pairReco[jIndex], pairReco[kIndex]))))
                     recoDeltaR = deltaR(pairReco[jIndex], pairReco[kIndex])
@@ -285,15 +308,15 @@ def getResolution(RecoMuon, prunedParticles, EtaRange = [0, 2.4],  PtRange=[5,10
                         resolutionParam.matchedDeltaRResolution.append(recoDeltaR-genDeltaR)
 
                     if recoDeltaR-genDeltaR < 0.2 and verbose == True:
-                        print '-----------mother %s ---------' % pairGen[kIndex].pdgId()
-                        print 'RECO: pt1:%s pt2:%s eta1: %s, eta2: %s , phi1: %s, phi2: %s, mass: %s deltaR: %s '%  (pairReco[jIndex].pt(), pairReco[kIndex].pt(), pairReco[jIndex].eta(), pairReco[kIndex].eta(), pairReco[jIndex].phi(), pairReco[kIndex].phi(), recoMass, recoDeltaR)
-                        print 'GENE: pt1:%s pt2:%s eta1: %s, eta2: %s , phi1: %s, phi2: %s, mass: %s, deltaR: %s, lxy: %s, lz:%s '%  (pairGen[jIndex].pt(), pairGen[kIndex].pt(), pairGen[jIndex].eta(), pairGen[kIndex].eta(), pairGen[jIndex].phi(), pairGen[kIndex].phi(), genMass, genDeltaR, pairGen[kIndex].vertex().Rho(), pairGen[kIndex].vertex().Z())
+                        print('-----------mother %s ---------' % pairGen[kIndex].pdgId())
+                        print('RECO: pt1:%s pt2:%s eta1: %s, eta2: %s , phi1: %s, phi2: %s, mass: %s deltaR: %s '%  (pairReco[jIndex].pt(), pairReco[kIndex].pt(), pairReco[jIndex].eta(), pairReco[kIndex].eta(), pairReco[jIndex].phi(), pairReco[kIndex].phi(), recoMass, recoDeltaR))
+                        print('GENE: pt1:%s pt2:%s eta1: %s, eta2: %s , phi1: %s, phi2: %s, mass: %s, deltaR: %s, lxy: %s, lz:%s '%  (pairGen[jIndex].pt(), pairGen[kIndex].pt(), pairGen[jIndex].eta(), pairGen[kIndex].eta(), pairGen[jIndex].phi(), pairGen[kIndex].phi(), genMass, genDeltaR, pairGen[kIndex].vertex().Rho(), pairGen[kIndex].vertex().Z()))
                         #print 'Global:    Deta-Rec: %s, DPhi-Rec: %s' %  (pairReco[jIndex].eta()-pairReco[kIndex].eta(), deltaPhi(pairReco[jIndex],pairReco[kIndex]) )
                         #print 'Global:    Deta-Rec: %s, DPhi-Rec: %s' %  (pairGen[jIndex].eta()-pairGen[kIndex].eta(), deltaPhi(pairGen[jIndex],pairGen[kIndex]) )
                         #print 'Global:    Diff: %s, Diff: %s' %  ( pairReco[jIndex].eta()-pairReco[kIndex].eta()-pairGen[jIndex].eta()+pairGen[kIndex].eta(), deltaPhi(pairGen[jIndex],pairGen[kIndex])- deltaPhi(pairReco[jIndex],pairReco[kIndex]) )
-                        print 'Global:    Deta-Rec: %s, DPhi-Rec: %s' %  (deltaEtaReco, deltaPhiReco )
-                        print 'Global:    Deta-Rec: %s, DPhi-Rec: %s' %  (deltaEtaGen, deltaPhiGen )
-                        print 'Global:    Diff: %s, Diff: %s DeltaR %s' %  ( deltaEtaReco-deltaEtaGen, deltaPhiReco-deltaPhiGen, recoDeltaR-genDeltaR)
+                        print('Global:    Deta-Rec: %s, DPhi-Rec: %s' %  (deltaEtaReco, deltaPhiReco ))
+                        print('Global:    Deta-Rec: %s, DPhi-Rec: %s' %  (deltaEtaGen, deltaPhiGen ))
+                        print('Global:    Diff: %s, Diff: %s DeltaR %s' %  ( deltaEtaReco-deltaEtaGen, deltaPhiReco-deltaPhiGen, recoDeltaR-genDeltaR))
                         
                     
                     
