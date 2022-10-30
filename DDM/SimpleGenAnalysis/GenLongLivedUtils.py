@@ -3,11 +3,44 @@ from RecoUtils import *
 from myMathUtils import *
 from ResolutionUtils import *
 
-def tellMeMore(p):
-    print((p.pdgId(), round(p.mass(), 2), round(p.pt(),2)))
-    if p.pdgId() != 21:
-        print(("  mother id : "+str(round(p.mother(0).pdgId(),2)), " mother mass: "+str(round(p.mother(0).mass(),2))))
+def getSignalPdgID():
+    """
+    List with all PDG IDs for Benchmark, DarkPhoton, and RPV.
+    """
+    pdgID = {"mother":[], "daughter":[]}
 
+    pdgID["mother"].append(35) # Phi
+    pdgID["mother"].append(25) # SM h
+
+    pdgID["mother"].append(1000001) # ~d_L
+    pdgID["mother"].append(2000001) # ~d_R
+    pdgID["mother"].append(1000002) # ~u_L
+    pdgID["mother"].append(2000002) # ~u_R
+    pdgID["mother"].append(1000003) # ~s_L
+    pdgID["mother"].append(2000003) # ~s_R
+    pdgID["mother"].append(1000004) # ~c_L
+    pdgID["mother"].append(2000004) # ~c_R
+    pdgID["mother"].append(1000005) # ~b_1
+    pdgID["mother"].append(2000005) # ~b_2
+    pdgID["mother"].append(1000006) # ~t_1
+    
+    pdgID["daughter"].append(6000113) # X
+    pdgID["daughter"].append(1024)    # Zd
+    pdgID["daughter"].append(1000022) # ~chi_10
+
+    return pdgID
+
+def getMotherPdgID(p):
+    pdgID = []
+
+    return pdgID
+    
+def tellMeMore(p):
+    print("pdgID: ", p.pdgId(), "mass:", round(p.mass(), 2), "pt:", round(p.pt(),2), "hardProcess:", p.isHardProcess())
+    ndaughters = len(p.daughterRefVector())
+    if p.pdgId() != 21:
+        print("  mother id : "+str(round(p.mother(0).pdgId(),2)), " mother mass: "+str(round(p.mother(0).mass(),2)), "ndaughters: " + str(ndaughters))
+        
 
 # Finds the last muons in a decay chain of a given list of muons.
 def findFinalStateMuons(prunedParticles):
@@ -31,19 +64,21 @@ def findFinalStateMuons(prunedParticles):
 
     return fsmuons
 
-def getDaugthers(prunedParticles, mother =35):
+def getDaughters(prunedParticles, mother = 35, daughther = 13):
+    """
+    Given a list of particles, returns the daughters of a given mother 
+    """
     daughtersMother = []
     for p in prunedParticles:
         if abs(p.pdgId()) > 0 and abs(p.pdgId()) < 1000:
             if p.isHardProcess():
                 if p.mother(0).pdgId() == mother:
-                    daughtersMother.append(p)
+                    if abs(p.pdgId()) == daughther:
+                        daughtersMother.append(p)
                     
-    if len(daughtersMother) == 2:        
-        return daughtersMother
 
-    else:
-        print ("WTF!! \n")
+    #Returns a list with 0 - 2 muons(depending on the model/daughter/mother)
+    return daughtersMother
 
 def getMothers(prunedParticles, mother1 =-1, mother2=-1):
     mothers = []
