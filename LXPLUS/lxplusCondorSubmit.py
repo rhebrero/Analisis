@@ -3,13 +3,14 @@
 import subprocess
 import os 
 import argparse
-
+import pdb
 parser = argparse.ArgumentParser(description="Handle to submit lxplus condor jobs, it request a plain file with all the scripts to run.")
 
-#modes                                                                                                                                                                                                                                                                                                                                                                                                                      
+#modes
 parser.add_argument('--flavour'    , dest='FLAVOUR'   , default='longlunch'     , help='which condor job flavour to use')
 parser.add_argument('--inputFile'  , dest='INPUTFILE' , default='master_jobs.sh',  help='input file (with scripts to run on)')
 parser.add_argument('--use-proxy'  , dest='PROXY'     , action='store_true'     , help='whether to ship the GRID certificate with the jobs')
+parser.add_argument('--clip'       , dest='CLIP'      , action='store_true'     , help='whether to run on clip (grid GRID combined with certificate untested)')
 
 args = parser.parse_args()
 print ("running on jobs in {INPUTFILE}".format(INPUTFILE=args.INPUTFILE) )
@@ -50,6 +51,25 @@ should_transfer_files  = NO
 queue 1
 '''
 
+clipSubmit = '''
+'''
+clipSubmitAdd = '''
+#!/usr/bin/bash
+#SBATCH -J job_{runNum}_{index}
+#SBATCH -D {cwd}
+#SBATCH -o logs/run{runNum}/{logname}_{index}.out
+#SBATCH -o logs/run{runNum}/{logname}_{index}.err
+
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=4G
+#SBATCH --time=00-12:00:00
+#SBATCH --qos=medium
+#SBATCH --partition c
+
+{ARGS}
+~     
+'''
+
 # get rid of empty lines in the condor scripts
 # if condorExecutable starts with a blank line, it won't run at all!!
 # the other blank lines are just for sanity, at this point
@@ -57,9 +77,12 @@ def stripEmptyLines(string):
     if string[0] == '\n':
         string = string[1:]
     return string
+
 condorExecutable = stripEmptyLines(condorExecutable)
 condorSubmit     = stripEmptyLines(condorSubmit    )
 condorSubmitAdd  = stripEmptyLines(condorSubmitAdd )
+clipSubmit  = stripEmptyLines(clipSubmit)
+clipSubmitAdd = stripEmptyLines(clipSubmitAdd)
 
 
 if args.PROXY == True:
@@ -79,12 +102,14 @@ else:
 
 # make the logs directory if it doesn't exist
 subprocess.call('mkdir -p logs', shell=True)
-executableName = 'condorExecutable.sh'
-open(executableName, 'w').write(condorExecutable.format(**locals()))
+if args.CLIP == False:
+    executableName = 'condorExecutable.sh'
+    open(executableName, 'w').write(condorExecutable.format(**locals()))
 
 # get the number of run* directories, and make the next one
 try:
-    numberOfExistingRuns = int(subprocess.check_output('ls -d logs/run* 2>/dev/null | wc -l', shell=True).strip('\n'))
+    #numberOfExistingRuns = int(subprocess.check_output('ls -d logs/run* 2>/dev/null | wc -l', shell=True).strip('\n')) this fails in clip.... 
+    numberOfExistingRuns = int(subprocess.check_output('ls -d logs/run* 2>/dev/null | wc -l', shell=True))
 except subprocess.CalledProcessError:
     numberOfExistingRuns = 0
 runNum = numberOfExistingRuns+1
@@ -94,20 +119,41 @@ subprocess.call('mkdir logs/run{}'.format(runNum), shell=True)
 #work is needed
     
 submitName = 'condorSubmit'
+if args.CLIP == True:
+    submitNameTemplate = 'clipSubmit_{runNum}_{index}'
 f = open(args.INPUTFILE, 'r')
 lines = f.readlines()
+index_job = 0
 for index, line in enumerate(lines):
     line = line.strip()
-    print (line)
-    condorSubmit += condorSubmitAdd.format(
-        runNum        = runNum,
-        #logname       = line.split(".")[-1] if line != '' else 'dummy',
-        logname       = "dummy_job",
-        index         = index,
-        ARGS          = line,
-        flavour       = args.FLAVOUR,
-        proxy_literal = PROXY_LITERAL
-    )
+    if len(line) == 0: continue
+    if line[0] == "#": continue #ignore commented lines
+    index_job = index_job + 1
+    if args.CLIP == False:
+        condorSubmit += condorSubmitAdd.format(
+            runNum        = runNum,
+            #logname       = line.split(".")[-1] if line != '' else 'dummy',
+            logname       = "dummy_job",
+            index         = index,
+            ARGS          = line,
+            flavour       = args.FLAVOUR,
+            proxy_literal = PROXY_LITERAL
+        )
+        print (line)
+    if args.CLIP == True:
+        clipJob = clipSubmit + clipSubmitAdd.format(
+            cwd           = PWD,
+            runNum        = runNum,
+            #logname       = line.split(".")[-1] if line != '' else 'dummy',
+            logname       = "job",
+            index         = index_job,
+            ARGS          = line
+        )
+        submitName = submitNameTemplate.format(runNum = runNum, index = index_job)
+        open(submitName, 'w').write(clipJob)
+        print(submitName, line)
+        subprocess.call('sbatch '+submitName, shell=True)
+        subprocess.call('mv '+submitName+' logs/run'+str(runNum), shell=True)
 
 print ("logs in logs/run{runNum}".format(runNum=runNum))
 
@@ -117,8 +163,10 @@ print ("logs in logs/run{runNum}".format(runNum=runNum))
 #ARGS          = SCRIPT + ' ' + ARGS,
 
 #write file and submit.
-open(submitName, 'w').write(condorSubmit)
-subprocess.call('chmod +x '+executableName                                 , shell=True)
-subprocess.call('condor_submit '+submitName                                , shell=True)
-subprocess.call('cp '+executableName+' '+submitName+' logs/run'+str(runNum), shell=True)
+if args.CLIP == False:
+    open(submitName, 'w').write(condorSubmit)
+    subprocess.call('chmod +x '+executableName                                 , shell=True)
+    subprocess.call('cp '+executableName+' '+submitName+' logs/run'+str(runNum), shell=True)
+    subprocess.call('slurm q alberto.escalante', shell=True) #displays the recently submitted jobs
+#subprocess.call('condor_submit '+submitName                                , shell=True)
 #subprocess.call('rm '+submitName                                           , shell=True)
