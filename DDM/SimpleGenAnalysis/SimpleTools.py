@@ -32,7 +32,6 @@ class Sample:
         return len(self.sampleName)
 
 def GetFilesFromSampleName(folderList):
-    #import pdb
     outputCleaned = []
     folderList = folderList.split(",")
     print ("Input:")
@@ -47,7 +46,9 @@ def GetFilesFromSampleName(folderList):
     prefix = "ls "
     samplePrefix = ""
 
-    if "/store/" in folderList[0]:
+    if "/store/" in folderList[0] and ".cbe.vbc.ac.at" not in os.environ["HOSTNAME"] and "clip-" not in os.environ["HOSTNAME"]:
+        #only used the prefix while working outside clip or clip batch (my T2)
+        print ("I need a proxy, I am at: ", os.environ["HOSTNAME"])
         prefix = "gfal-ls gsiftp://se.grid.vbc.ac.at:2811"
         samplePrefix = "root://eos.grid.vbc.ac.at/"
 
@@ -58,7 +59,7 @@ def GetFilesFromSampleName(folderList):
         depth  = 0
         command   = prefix + folder
         rootFiles = subprocess.getoutput(command)
-        rootFiles = rootFiles.split('/n')
+        rootFiles = rootFiles.split('\n')
         print (rootFiles)
         #adding folder to directory
         for index, rootFile in enumerate(rootFiles):
@@ -67,7 +68,6 @@ def GetFilesFromSampleName(folderList):
     print ("Summary")
     print ("nfiles", len(output))
     print (output)
-    #pdb.set_trace()
     return output
 
 
@@ -96,7 +96,6 @@ def createSimple2DPlot(var, title, nbinsX, inibinX, endbinX, nbinsY, inibinY, en
     return hist2D
 
 def makeSimple1DPlot(var, canvas, samples, title, xtitle, ytitle, output, folder, logy=False, showOnly = [], norm = True):
-
     file = ROOT.TFile(folder+output+"-hist.root","recreate")
     file.cd()
     template = []
@@ -411,3 +410,144 @@ def makeRatio(RootFileNumName, RootFileDenName, HistNumName, HistDenName, NumTag
     Canvas.SaveAs(Output+".pdf")
     Canvas.SaveAs(Output+".png")
     Canvas.SaveAs(Output+".jpg")
+
+
+def addVariable(plots, var, xtitle, ytitle="Events", title="", canvas="", rebin=1, logy=False, norm=False, show_more = False, legend_offsetx=0, legend_offsety=0):
+    """
+    adds a dictionary to plots dictionary
+    """
+    
+    plots.append({"var": var, "xtitle": xtitle, "ytitle": ytitle, "title": title, "canvas": canvas, "rebin": rebin, "logy": logy, "norm":norm, "show_more":show_more, "output": var, "legend_offsetx": legend_offsetx, "legend_offsety": legend_offsety})
+
+    return plots
+
+def addInput(inputs, inputFile, hist, legend, color):
+    """
+    adds a dictionary to plots dictionary
+    """
+    inputs.append(
+        {"inputFile": inputFile,
+         "hist": hist,
+         "legend": legend,
+         "color": color}
+    )
+
+    return inputs
+
+def makeSimple1DPlotFromDic(plot, inputs, folder, resize_legend=[]):
+    """
+    makes a simple 1D from a dictionary
+    inputs: dictionary with variable details
+    WIP to be finished
+    """
+    
+    #plot details, defined in addVariable function
+    var = plot["var"]
+    canvas = plot["canvas"]
+    title = plot["title"]
+    xtitle = plot["xtitle"]
+    ytitle = plot["ytitle"]
+    output = plot["output"]
+    rebin = plot["rebin"]
+    logy = plot["logy"]
+    norm = plot["norm"]
+    show_more = plot["show_more"]
+    legend_offsetx = plot["legend_offsetx"]
+    legend_offsety = plot["legend_offsety"] 
+
+    Canvas = ROOT.TCanvas(canvas, title, 10, 10, 700, 500 )
+    Canvas.cd()
+    ROOT.gStyle.SetOptStat(0)
+
+    if len(resize_legend)== 4:
+        leg = ROOT.TLegend(resize_legend[0], resize_legend[1], resize_legend[2], resize_legend[3])
+    elif show_more == True:
+        leg = ROOT.TLegend(0.3+legend_offsetx,0.60+legend_offsety,0.89+legend_offsetx,0.89+legend_offsety)
+    else:
+        leg = ROOT.TLegend(0.55+legend_offsetx,0.65+legend_offsety,0.89+legend_offsetx,0.89+legend_offsety)
+        
+    leg.SetFillColor(0)
+    leg.SetBorderSize(0)
+
+    RootFile = []
+    hist = []
+
+    for index, kinputs in enumerate(inputs):
+        RootFile.append(ROOT.TFile.Open(kinputs["inputFile"] + var + "-hist.root"))
+        hist.append(RootFile[index].Get(kinputs["hist"]))
+
+        print (kinputs["hist"], kinputs["inputFile"] + var + "-hist.root", kinputs["color"])
+        print (hist[index].Integral(), var, "Mean:", hist[index].GetMean())
+
+        ##hist
+        normHist = 1
+        if hist[index].Integral()> 0 and norm == True:
+            hist[index].Scale(normHist/hist[index].Integral())
+
+        ##rebin
+        if rebin > 1:
+            hist[index] = hist[index].Rebin(rebin)
+
+        ## get maximum and mininum
+        if index == 0:
+            Minimum = hist[index].GetMinimum()
+            Maximum = hist[index].GetMaximum()
+        else:
+            if hist[index].GetMinimum() < Minimum:
+                Minimum = hist[index].GetMinimum()
+            if hist[index].GetMaximum() > Maximum:
+                Maximum = hist[index].GetMaximum()
+
+        if index > 0:
+            hist[index].Draw("hist same")
+
+        if index == 0:
+            hist[index].SetTitle(title)
+            Xaxis = hist[index].GetXaxis()
+            Xaxis.SetTitle(xtitle)
+            Yaxis = hist[index].GetYaxis()
+            Yaxis.SetTitle(ytitle)
+            hist[index].Draw("hist")
+
+        #add entry
+        if show_more == True:
+            leg.AddEntry(hist[index], kinputs["legend"] + ", <X>= " + str(round(hist[index].GetMean(), 1)) + ", N=" + str(round(hist[index].Integral(),0)), "l")
+        else:
+            leg.AddEntry(hist[index], kinputs["legend"], "l")
+
+        ##setting the colors
+        hist[index].SetLineColor(kinputs["color"])
+        hist[index].SetLineWidth(3)
+
+    ## set Maximum a minimum for good visilibility (to be tested), applied to first histogram
+    filenameSuffix = ""
+    if logy == False:
+        hist[0].SetMinimum(.0)
+        if norm == True:
+            hist[0].SetMaximum(1.3)
+            hist[0].GetYaxis().SetRangeUser(0., 1.3)
+            filenameSuffix = filenameSuffix + "_norm"
+        else:
+            hist[0].SetMaximum(1.3*Maximum)
+            hist[0].GetYaxis().SetRangeUser(0., 1.3*Maximum)
+            
+    if logy==True:
+        hist[0].SetMinimum(0.01) #avoid to divide by zero
+        Canvas.SetLogy(1)
+        filenameSuffix = filenameSuffix + "_logy"
+        if norm == True:
+            hist[0].SetMaximum(1.5)
+            hist[0].GetYaxis().SetRangeUser(0.01, 1.5)
+            filenameSuffix = filenameSuffix + "_norm"
+        else:
+            hist[0].SetMaximum(2*Maximum)
+            hist[0].GetYaxis().SetRangeUser(1.0, 2*Maximum)
+
+    leg.Draw()
+
+    if show_more == True:
+        filenameSuffix = filenameSuffix + "_showmore"
+
+    #save output
+    for kformat in [".pdf", ".png", ".eps", ".root"]:        
+        Canvas.SaveAs(folder+output+filenameSuffix+kformat)
