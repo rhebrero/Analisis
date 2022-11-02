@@ -23,6 +23,8 @@ for fragment in fragments:
     #basic cleanup
     fragment = fragment.strip()
     if len(fragment) == 0: continue
+    if "__pycache__" in fragment: continue
+    
     if ".py" not in fragment:
         print("ERROR: ", fragment, "is not a valid fragment")
         exit()
