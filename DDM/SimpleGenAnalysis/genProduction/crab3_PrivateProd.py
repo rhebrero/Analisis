@@ -23,3 +23,4 @@ if config.Data.publication == True:
 
 config.section_("Site")
 config.Site.storageSite = 'T2_AT_Vienna'
+#config.Site.whitelist = ['T2_AT_Vienna'] (only for debugging purposes)
