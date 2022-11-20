@@ -167,6 +167,9 @@ if args.CLIP == False:
     open(submitName, 'w').write(condorSubmit)
     subprocess.call('chmod +x '+executableName                                 , shell=True)
     subprocess.call('cp '+executableName+' '+submitName+' logs/run'+str(runNum), shell=True)
+else:
     subprocess.call('slurm q alberto.escalante', shell=True) #displays the recently submitted jobs
+    print('Monitor? slurm q alberto.escalante') 
+
 #subprocess.call('condor_submit '+submitName                                , shell=True)
 #subprocess.call('rm '+submitName                                           , shell=True)
