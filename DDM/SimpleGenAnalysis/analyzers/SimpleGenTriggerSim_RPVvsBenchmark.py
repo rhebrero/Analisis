@@ -19,6 +19,7 @@ from math import *
 #Utils for Longlived Generator Level studies.
 from GenLongLivedUtils import *
 from SimpleTools import *
+from myMathUtils import *
 
 #bash utils
 import os
@@ -38,6 +39,7 @@ parser.add_argument('--triggerlabel' , dest='TRIGGERLABEL' , default='HLT'      
 parser.add_argument('--nevents'      , dest='NEVENTS'      , default=-1         , help='number of processed events')
 parser.add_argument('--acceptance'   , dest='ACCEPTANCE'   , default=False      , help='apply basic acceptance cuts')
 parser.add_argument('--outFolder'    , dest='OUTFOLDER'    , default=''         , help='output folder')
+parser.add_argument('--LHE '         , dest='LHE'          , default=False      , help='run on LHE root file')
 
 args = parser.parse_args()
 
@@ -99,6 +101,9 @@ labelBeamspot  = ("hltOnlineBeamSpot","", args.TRIGGERLABEL)
 
 h_massHiggs = createSimple1DPlot("h_massHiggs", "M_{H}", 200, 100., 1600., samples)
 h_massX     = createSimple1DPlot("h_massX", "M_{X}"    , 200, 0., 500., samples)
+h_ptX       = createSimple1DPlot("h_ptX", "p^{X}_{T}"  , 200, 0., 500., samples)
+h_ptOvermassX = createSimple1DPlot("h_ptOvermass", "p_{T}/M_{X}"  , 100, 0., 10., samples)
+h_betaX     = createSimple1DPlot("h_beta", "#beta_{X}"  , 100, 0., 1., samples)
 h_muMulti   = createSimple1DPlot("", "h_muMulti"       , 4, 0., 4., samples)
 h_lxy       = createSimple1DPlot("h_lxy", "lxy"        , 300,  0., 300., samples)
 h_dxyMuons  = createSimple1DPlot("", "h_dxyMuons"      , 100,  0.,   50., samples)
@@ -108,7 +113,13 @@ h_mindxyMuons  = createSimple1DPlot("", "h_mindxyMuons", 100,  0.,   1., samples
 h_mindxygenMuons  = createSimple1DPlot("", "h_mindxygenMuons", 100,  0.,   1., samples)
 h_mindzMuons   = createSimple1DPlot("", "h_mindzMuons" , 100,  0.,  30., samples)
 h_minptMuons   = createSimple1DPlot("", "h_minptMuons" ,  60,  0.,  60., samples)
+h_minptMuons_l = createSimple1DPlot("", "h_minptMuons_l" , 200,  0., 200., samples)
 h_maxptMuons   = createSimple1DPlot("", "h_maxptMuons" ,  60,  0.,  60., samples)
+h_dimumass    = createSimple1DPlot("", "h_dimumass"    , 120, 0., 120., samples)
+h_dimumass_l  = createSimple1DPlot("", "h_dimumass_l"  , 500, 0., 500., samples)
+h_dimupt     = createSimple1DPlot("", "h_dimupt"       , 120, 0., 120., samples)
+h_proptime   = createSimple1DPlot("", "h_proptime"     , 120, 0., 120., samples)
+h_proptime_l = createSimple1DPlot("", "h_proptime_l"   , 500, 0., 500., samples)
 h_etaMuons  = createSimple1DPlot("", "h_etaMuons"      , 100, -4.,    4., samples)
 h_dRMuons   = createSimple1DPlot("", "h_dRMuons"       , 100,  0.,    3., samples)
 h_cosalpha  = createSimple1DPlot("", "h_cosalpha"      , 100, -1.,    1., samples)
@@ -176,7 +187,9 @@ for index, ksample in enumerate(sampleName):
     count_events = 0
     for indexSubsample, ksubsample in enumerate(ksample):## To debug 
         print ("   SUBSAMPLE {INDEXSUB}/{TOTALSUB}: {NAMESUB} ".format(INDEXSUB=indexSubsample+1, TOTALSUB=str(len(ksample)), NAMESUB=ksubsample.split('/')[-1] ))
-
+        if (args.LHE == False and "_inLHE_" in ksubsample.split('/')[-1]):
+            print ("   INFO: This is a LHE file -> Skip")
+            continue
         events = Events(ksubsample)    
         for i,event in enumerate(events):
             count_events = count_events + 1
@@ -231,8 +244,16 @@ for index, ksample in enumerate(sampleName):
 
                             alldaus = p.daughterRefVector()
                             if len(alldaus) == 1 and alldaus[0].pdgId() == p.pdgId(): continue # remove repeated gen particles (only appearing in RPV) 
-                            h_massX[index].Fill(p.mass()) 
 
+                            massX = p.mass()
+                            h_massX[index].Fill(massX)
+                            ptX = p.pt()
+                            h_ptX[index].Fill(ptX)
+
+                            h_ptOvermassX[index].Fill(ptX/massX)
+
+                            genBeta = sqrt(p.energy()*p.energy() - p.mass()*p.mass())/p.energy()
+                            h_betaX[index].Fill(genBeta) 
                             #lxy[index].Fill(abs(p.vertex().rho()))
                             #lzVslxy[index].Fill(abs(p.vertex().Z()), abs(p.vertex().rho()))
                             ## debug ##
@@ -265,6 +286,7 @@ for index, ksample in enumerate(sampleName):
                                     dimu_px = fsmuons[0].px() + fsmuons[1].px()
                                     dimu_py = fsmuons[0].py() + fsmuons[1].py()
                                     dimu_pt = sqrt(dimu_px**2 + dimu_py**2)
+                                    dimu_mass = mass(fsmuons[0], fsmuons[1])
 
                                     #minimum
                                     min_pt = 999
@@ -322,11 +344,12 @@ for index, ksample in enumerate(sampleName):
                                         min_dz     = min(fabs(dz), fabs(min_dz))
 
                                     h_minptMuons[index].Fill(min_pt)
+                                    h_minptMuons_l[index].Fill(min_pt)
                                     h_maxptMuons[index].Fill(max_pt)
                                     h_mindxygenMuons[index].Fill(min_dxygen)
                                     h_mindxyMuons[index].Fill(min_dxy)
                                     h_mindzMuons[index].Fill(min_dz)
-
+                                   
                                     if doResolution == True:
                                         for ptIndex, pT in enumerate(bins["pT"]):
                                             if min_pt > float(pT):                                        
@@ -353,7 +376,7 @@ for index, ksample in enumerate(sampleName):
                                             h_mindxyrange[distanceIndex][index].Fill(min_dxy)
 
                                     # delta R between two muons in a pair
-                                    dphi = fabs(fsmuons[0].phi() - fsmuons[1].phi())
+                                    dphi = fabs(deltaPhi(fsmuons[0], fsmuons[1]))
                                     deta = fabs(fsmuons[0].eta() - fsmuons[1].eta())
                                     dR = sqrt(dphi**2 + deta**2)
                                     h_dRMuons[index].Fill(dR)
@@ -379,6 +402,14 @@ for index, ksample in enumerate(sampleName):
                                         h_lxyVslz[index].Fill(fabs(fsmuons[0].vertex().Z()), fsmuons[0].vertex().rho())
                                         h_dphi[index].Fill(dphi)
 
+                                        # mass
+                                        h_dimumass[index].Fill(dimu_mass)
+                                        h_dimumass_l[index].Fill(dimu_mass)
+                                        h_dimupt[index].Fill(dimu_pt)
+
+                                        h_proptime[index].Fill(fsmuons[0].vertex().rho()*10*massX/ptX) #convert lxy from cm to mm
+                                        h_proptime_l[index].Fill(fsmuons[0].vertex().rho()*10*massX/ptX) #convert lxy from cm to mm
+
                                         if doResolution == True:
                                             for distanceIndex, distance in enumerate(bins["distance"]):
                                                 h_lxyrange[distanceIndex][index].Fill(fsmuons[0].vertex().rho())
@@ -403,6 +434,9 @@ for index, ksample in enumerate(sampleName):
 
 makeSimple1DPlot(h_massHiggs, 'h_massHiggs', samples, '', 'M_{Higgs}', 'events', 'h_massHiggs', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_massX, 'h_massX', samples, '', 'M_{X}', 'events', 'h_massX', outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_ptX, 'h_ptX', samples, '', 'p^{X}_{T}', 'events', 'h_ptX', outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_betaX, 'h_betaX', samples, '', '#beta_{X}', 'events', 'h_betaX', outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_ptOvermassX, 'h_ptOvermassX', samples, '', 'p_{T}/M_{X}', 'events', 'h_ptOvermassX', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_muMulti, 'h_muMulti', samples, '', '#mu multiplicity', 'events', 'h_muMulti', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_lxy, 'h_lxy', samples, '', 'L_{xy}[cm]', 'events', 'h_lxy', outFolder, logy=True, norm=False)
 makeSimple2DPlot(h_lxyVslz, 'h_lxyVslz', samples, 'Generated L_{xy}[cm] vs L_{z}[cm]', 'L_{z}[cm]', 'L_{xy}[cm]', 'h_LxyVsLz', outFolder)
@@ -411,7 +445,13 @@ makeSimple1DPlot(h_ptMuons, 'h_ptMuons', samples, '', 'pT [GeV]', '', 'h_ptMuons
 makeSimple1DPlot(h_dxyMuons, 'h_dxyMuons', samples, '', 'dxy [cm]', '', 'h_dxyMuons', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_dzMuons,  'h_dzMuons',  samples, '', 'dz [cm]',  '', 'h_dzMuons', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_minptMuons, 'h_minptMuons', samples, '', 'min pT [GeV]', '', 'h_minptMuons', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_minptMuons_l, 'h_minptMuons_l', samples, '', 'min pT [GeV]', '', 'h_minptMuons_l', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_maxptMuons, 'h_maxptMuons', samples, '', 'max pT [GeV]', '', 'h_maxptMuons', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_dimumass, 'h_dimumass', samples, '', 'm_{#mu#mu} [GeV]', '', 'h_dimumass', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_dimumass_l, 'h_dimumass_l', samples, '', 'm_{#mu#mu} [GeV]', '', 'h_dimumass_l', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_dimupt, 'h_dimupt', samples, '', 'dim p_{T} [GeV]', '', 'h_dimupt', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_proptime, 'h_proptime', samples, '', 'prop.time', '', 'h_proptime', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_proptime_l, 'h_proptime_l', samples, '', 'prop.time', '', 'h_proptime_l', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_mindxyMuons, 'h_mindxyMuons', samples, '', 'min dxy [cm]', '', 'h_mindxyMuons', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_mindxygenMuons, 'h_mindxygenMuons', samples, '', 'min dxy [cm]', '', 'h_mindxygenMuons', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_mindzMuons,  'h_mindzMuons',  samples, '', 'min dz [cm]',  '', 'h_mindzMuons', outFolder, logy=True, norm=False)
@@ -420,7 +460,6 @@ makeSimple1DPlot(h_dRMuons,  'h_dRMuons',  samples, '', 'dR',         '', 'h_dRM
 makeSimple1DPlot(h_cosalpha, 'h_cosalpha', samples, '', 'cos(alpha)', '', 'h_cosalpha', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_alpha,    'h_alpha',    samples, '', 'alpha',      '', 'h_alpha',    outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_dphi,     'h_dphi',     samples, '', 'dphi',       '', 'h_dphi',     outFolder, logy=False, norm=False)
-#makeSimple2DPlot(h_mOverTau, 'h_mOverTau', samples,'', 'm/tau', 'L', 'E', 'h_mOverTau', outFolder)
 
 #1D Histograms Gen Level, differential plots.
 if doResolution == True:
