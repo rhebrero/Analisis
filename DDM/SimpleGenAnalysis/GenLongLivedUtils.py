@@ -25,7 +25,7 @@ def getSignalPdgID():
     pdgID["mother"].append(1000006) # ~t_1
     
     pdgID["daughter"].append(6000113) # X
-    pdgID["daughter"].append(1024)    # Zd
+    pdgID["daughter"].append(1023)    # Zd
     pdgID["daughter"].append(1000022) # ~chi_10
 
     return pdgID
