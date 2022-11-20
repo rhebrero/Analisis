@@ -412,12 +412,12 @@ def makeRatio(RootFileNumName, RootFileDenName, HistNumName, HistDenName, NumTag
     Canvas.SaveAs(Output+".jpg")
 
 
-def addVariable(plots, var, xtitle, ytitle="Events", title="", canvas="", rebin=1, logy=False, norm=False, show_more = False, legend_offsetx=0, legend_offsety=0):
+def addVariable(plots, var, xtitle, ytitle="Events", title="", canvas="", rebin=1, logy=False, norm=False, show_more = False, do_exp_fit = False, legend_offsetx=0, legend_offsety=0):
     """
     adds a dictionary to plots dictionary
     """
     
-    plots.append({"var": var, "xtitle": xtitle, "ytitle": ytitle, "title": title, "canvas": canvas, "rebin": rebin, "logy": logy, "norm":norm, "show_more":show_more, "output": var, "legend_offsetx": legend_offsetx, "legend_offsety": legend_offsety})
+    plots.append({"var": var, "xtitle": xtitle, "ytitle": ytitle, "title": title, "canvas": canvas, "rebin": rebin, "logy": logy, "norm": norm, "show_more": show_more, "do_exp_fit": do_exp_fit, "output": var, "legend_offsetx": legend_offsetx, "legend_offsety": legend_offsety})
 
     return plots
 
@@ -451,6 +451,7 @@ def makeSimple1DPlotFromDic(plot, inputs, folder, resize_legend=[]):
     rebin = plot["rebin"]
     logy = plot["logy"]
     norm = plot["norm"]
+    do_exp_fit = plot["do_exp_fit"]
     show_more = plot["show_more"]
     legend_offsetx = plot["legend_offsetx"]
     legend_offsety = plot["legend_offsety"] 
@@ -471,13 +472,22 @@ def makeSimple1DPlotFromDic(plot, inputs, folder, resize_legend=[]):
 
     RootFile = []
     hist = []
-
+    if do_exp_fit == True:
+        exp_fit = []
+        func = '[0]*TMath::Exp(-[1] * x)'
+        text  = ROOT.TLatex(0.60, 0.92, func)
+        text.SetNDC()
+        text.SetTextFont(42)
+        text.SetTextSize(0.037)        
+        
     for index, kinputs in enumerate(inputs):
         RootFile.append(ROOT.TFile.Open(kinputs["inputFile"] + var + "-hist.root"))
         hist.append(RootFile[index].Get(kinputs["hist"]))
-
+        if do_exp_fit == True:
+            exp_fit.append(ROOT.TF1('exp_fit', func, hist[index].GetXaxis().GetXmin(), hist[index].GetXaxis().GetXmax()))
+            
         print (kinputs["hist"], kinputs["inputFile"] + var + "-hist.root", kinputs["color"])
-        print (hist[index].Integral(), var, "Mean:", hist[index].GetMean())
+        print (hist[index].Integral(), var, "Mean:", hist[index].GetMean(), "Min:", hist[index].GetXaxis().GetXmin(), "Max: ", hist[index].GetXaxis().GetXmax())
 
         ##hist
         normHist = 1
@@ -519,13 +529,25 @@ def makeSimple1DPlotFromDic(plot, inputs, folder, resize_legend=[]):
         hist[index].SetLineColor(kinputs["color"])
         hist[index].SetLineWidth(3)
 
+        if do_exp_fit == True:
+            hist[index].Fit(exp_fit[index])
+            exp_fit[index].SetLineColor(kinputs["color"])
+            exp_fit[index].SetLineWidth(2)
+            exp_fit[index].SetLineStyle(7)
+            exp_fit[index].Draw("same")            
+            #leg.AddEntry(exp_fit[index], "[0]={PAR0}#pm{PAR0ERR}, 1/[1]={PAR1}#pm{PAR1ERR}".format(PAR0 = round(exp_fit[index].GetParameter(0),1), PAR0ERR = round(exp_fit[index].GetParError(0),1), PAR1=round(1/exp_fit[index].GetParameter(1),1), PAR1ERR=round(1/exp_fit[index].GetParError(1),1)), "L")
+            #leg.AddEntry(exp_fit[index], "[0] = {PAR0} #pm {PAR0ERR}".format(PAR0 = round(exp_fit[index].GetParameter(0),2), PAR0ERR = round(exp_fit[index].GetParError(0),2)), "L")
+            leg.AddEntry(exp_fit[index], "1/[1] = {PAR1} #pm {PAR1ERR}".format(PAR1=round(1/exp_fit[index].GetParameter(1),2), PAR1ERR=round(exp_fit[index].GetParError(1)/exp_fit[index].GetParameter(1), 2)), "L")
+
     ## set Maximum a minimum for good visilibility (to be tested), applied to first histogram
     filenameSuffix = ""
     if logy == False:
         hist[0].SetMinimum(.0)
         if norm == True:
-            hist[0].SetMaximum(1.3)
-            hist[0].GetYaxis().SetRangeUser(0., 1.3)
+            #hist[0].SetMaximum(1.3)
+            #hist[0].GetYaxis().SetRangeUser(0., 1.3)
+            hist[0].SetMaximum(1.3*Maximum)
+            hist[0].GetYaxis().SetRangeUser(0., 1.3*Maximum)
             filenameSuffix = filenameSuffix + "_norm"
         else:
             hist[0].SetMaximum(1.3*Maximum)
@@ -537,14 +559,17 @@ def makeSimple1DPlotFromDic(plot, inputs, folder, resize_legend=[]):
         filenameSuffix = filenameSuffix + "_logy"
         if norm == True:
             hist[0].SetMaximum(1.5)
-            hist[0].GetYaxis().SetRangeUser(0.01, 1.5)
+            hist[0].GetYaxis().SetRangeUser(0.001, 1.5)
             filenameSuffix = filenameSuffix + "_norm"
         else:
             hist[0].SetMaximum(2*Maximum)
             hist[0].GetYaxis().SetRangeUser(1.0, 2*Maximum)
 
     leg.Draw()
-
+    if do_exp_fit == True:
+        text.Draw()
+        filenameSuffix = filenameSuffix + "_fit"
+        
     if show_more == True:
         filenameSuffix = filenameSuffix + "_showmore"
 
