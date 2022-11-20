@@ -70,6 +70,15 @@ def GetFilesFromSampleName(folderList):
     print (output)
     return output
 
+def getSuffix(path):
+    '''returns suffixies date and subfolder in a given crab production'''
+    date = os.listdir("/"+path)[-1]
+    suffix = os.listdir("/"+path+"/"+date)[-1]
+
+    eos_suffix = "{DATE}/{SUFFIX}".format(DATE=date, SUFFIX=suffix)
+    if eos_suffix[-1] != '/': eos_suffix = eos_suffix + "/"
+
+    return eos_suffix
 
 def createSimple1DPlot(var, title, nbins, inibin, endbin, samples):
     hist1D = []
@@ -418,6 +427,27 @@ def addVariable(plots, var, xtitle, ytitle="Events", title="", canvas="", rebin=
     """
     
     plots.append({"var": var, "xtitle": xtitle, "ytitle": ytitle, "title": title, "canvas": canvas, "rebin": rebin, "logy": logy, "norm": norm, "show_more": show_more, "do_exp_fit": do_exp_fit, "output": var, "legend_offsetx": legend_offsetx, "legend_offsety": legend_offsety})
+
+    return plots
+
+def addImportantVariable(plots, var, xtitle, rebin = 1, fit = False, show_more = False):
+    """
+    creates plots in different formats for imporant variables
+    """
+    plots = addVariable(plots, var, xtitle, rebin =rebin)    
+    plots = addVariable(plots, var, xtitle, rebin =rebin, norm = True) 
+    plots = addVariable(plots, var, xtitle, rebin =rebin, logy = True)
+    plots = addVariable(plots, var, xtitle, rebin =rebin, logy = True, norm = True)
+
+    if show_more == True:
+        plots = addVariable(plots, var, xtitle, rebin =rebin, norm = True, show_more = True) 
+        plots = addVariable(plots, var, xtitle, rebin =rebin, logy = True, norm = True, show_more = True) 
+
+    if fit == True:
+        plots = addVariable(plots, var, xtitle, rebin = rebin, do_exp_fit = True)
+        plots = addVariable(plots, var, xtitle, rebin = rebin, norm = True, do_exp_fit = True)
+        plots = addVariable(plots, var, xtitle, rebin = rebin, logy = True, do_exp_fit = True)
+        plots = addVariable(plots, var, xtitle, rebin = rebin, logy = True, norm = True, do_exp_fit = True)
 
     return plots
 
