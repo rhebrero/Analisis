@@ -518,15 +518,18 @@ def makeSimple1DPlotFromDic(plot, inputs, folder, resize_legend=[]):
             
         print (kinputs["hist"], kinputs["inputFile"] + var + "-hist.root", kinputs["color"])
         print (hist[index].Integral(), var, "Mean:", hist[index].GetMean(), "Min:", hist[index].GetXaxis().GetXmin(), "Max: ", hist[index].GetXaxis().GetXmax())
-
-        ##hist
-        normHist = 1
-        if hist[index].Integral()> 0 and norm == True:
-            hist[index].Scale(normHist/hist[index].Integral())
-
+            
         ##rebin
         if rebin > 1:
             hist[index] = hist[index].Rebin(rebin)
+
+        ##hist-oveflow
+        hist[index].GetXaxis().SetRange(1, hist[index].GetNbinsX()+1) 
+
+        ##hist-normalization
+        normHist = 1
+        if hist[index].Integral()> 0 and norm == True:
+            hist[index].Scale(normHist/hist[index].Integral())
 
         ## get maximum and mininum
         if index == 0:
