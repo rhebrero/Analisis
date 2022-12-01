@@ -25,7 +25,7 @@ from myMathUtils import *
 import os
 
 #configuration file
-import argparse
+import argparse                                    
 
 #Updated Octobre 2022
 parser = argparse.ArgumentParser(description="Simple gen analyzer, compatible with RPV, Benchmark and Darkphoton")
@@ -105,7 +105,10 @@ h_ptX       = createSimple1DPlot("h_ptX", "p^{X}_{T}"  , 200, 0., 500., samples)
 h_ptOvermassX = createSimple1DPlot("h_ptOvermass", "p_{T}/M_{X}"  , 100, 0., 10., samples)
 h_betaX     = createSimple1DPlot("h_beta", "#beta_{X}"  , 100, 0., 1., samples)
 h_muMulti   = createSimple1DPlot("", "h_muMulti"       , 4, 0., 4., samples)
-h_lxy       = createSimple1DPlot("h_lxy", "lxy"        , 300,  0., 300., samples)
+h_genTriggerDiff = createSimple1DPlot("", "h_genTriggerDiff"    , 6, 0., 6., samples)
+h_genTrigger = createSimple1DPlot("", "h_genTrigger"    , 2, 0., 2., samples)
+h_lxy_s     = createSimple1DPlot("h_lxy_s", "lxy_s"      , 300,  0., 100., samples)
+h_lxy       = createSimple1DPlot("h_lxy", "lxy"       , 300,  0., 300., samples)
 h_dxyMuons  = createSimple1DPlot("", "h_dxyMuons"      , 100,  0.,   50., samples)
 h_dzMuons   = createSimple1DPlot("", "h_dzMuons"       , 100,  0.,  100., samples)
 h_ptMuons   = createSimple1DPlot("", "h_ptMuons"       , 100,  0.,  250., samples)
@@ -296,6 +299,7 @@ for index, ksample in enumerate(sampleName):
 
                                     #maximum
                                     max_pt = 0
+                                    max_eta = 0
 
                                     if args.ACCEPTANCE == True:
                                         #basic acceptance cuts
@@ -338,10 +342,11 @@ for index, ksample in enumerate(sampleName):
 
                                         # minimum quantities of the pair
                                         min_pt     = min(muon.pt(), min_pt)
-                                        max_pt     = max(muon.pt(), max_pt)
                                         min_dxygen = min(fabs(dxygen), fabs(min_dxygen))
                                         min_dxy    = min(fabs(dxy), fabs(min_dxy))
                                         min_dz     = min(fabs(dz), fabs(min_dz))
+                                        max_pt     = max(muon.pt(), max_pt)
+                                        max_eta    = max(fabs(muon.eta()), max_eta)
 
                                     h_minptMuons[index].Fill(min_pt)
                                     h_minptMuons_l[index].Fill(min_pt)
@@ -349,7 +354,14 @@ for index, ksample in enumerate(sampleName):
                                     h_mindxygenMuons[index].Fill(min_dxygen)
                                     h_mindxyMuons[index].Fill(min_dxy)
                                     h_mindzMuons[index].Fill(min_dz)
-                                   
+
+                                    genTriggerBit = getGenTrigger(min_pt, max_pt, min_dxy, max_eta, fsmuons[0].vertex().rho(), abs(fsmuons[0].vertex().Z()))
+                                    h_genTriggerDiff[index].Fill(genTriggerBit)
+                                    if genTriggerBit > 2:
+                                        h_genTrigger[index].Fill(1)
+                                    else:
+                                        h_genTrigger[index].Fill(0)
+
                                     if doResolution == True:
                                         for ptIndex, pT in enumerate(bins["pT"]):
                                             if min_pt > float(pT):                                        
@@ -398,6 +410,7 @@ for index, ksample in enumerate(sampleName):
                                             
                                         dphi = acos(cosdphi)
                                         #print ("dimu_pt =", dimu_pt, "cos(dphi) =", cosdphi, "dphi =", dphi)
+                                        h_lxy_s[index].Fill(fsmuons[0].vertex().rho())
                                         h_lxy[index].Fill(fsmuons[0].vertex().rho())
                                         h_lxyVslz[index].Fill(fabs(fsmuons[0].vertex().Z()), fsmuons[0].vertex().rho())
                                         h_dphi[index].Fill(dphi)
@@ -438,6 +451,9 @@ makeSimple1DPlot(h_ptX, 'h_ptX', samples, '', 'p^{X}_{T}', 'events', 'h_ptX', ou
 makeSimple1DPlot(h_betaX, 'h_betaX', samples, '', '#beta_{X}', 'events', 'h_betaX', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_ptOvermassX, 'h_ptOvermassX', samples, '', 'p_{T}/M_{X}', 'events', 'h_ptOvermassX', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_muMulti, 'h_muMulti', samples, '', '#mu multiplicity', 'events', 'h_muMulti', outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_genTriggerDiff, 'h_genTriggerDiff', samples, '', 'gen level trigger', 'events', 'h_genTriggerDiff', outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_genTrigger, 'h_genTrigger', samples, '', 'gen level trigger', 'events', 'h_genTrigger', outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_lxy_s, 'h_lxy_s', samples, '', 'L_{xy}[cm]', 'events', 'h_lxy_s', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_lxy, 'h_lxy', samples, '', 'L_{xy}[cm]', 'events', 'h_lxy', outFolder, logy=True, norm=False)
 makeSimple2DPlot(h_lxyVslz, 'h_lxyVslz', samples, 'Generated L_{xy}[cm] vs L_{z}[cm]', 'L_{z}[cm]', 'L_{xy}[cm]', 'h_LxyVsLz', outFolder)
 makeSimple1DPlot(h_etaMuons, 'h_etaMuons', samples, '', 'eta', '', 'h_etaMuons', outFolder, logy=False, norm=False)
