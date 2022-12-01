@@ -242,9 +242,6 @@ def getTrueMother(p):
         p = motherParticle(p)
         motherPdgId = p.pdgId()
     return p.mother(0)
-
-
-
     
 
 def getResolution(RecoMuon, prunedParticles, EtaRange = [0, 2.4],  PtRange=[5,1000], LxyRange=[0,1000], LzRange=[0,1000], DrRange = [0.5, 10], TrackType = 'STA'):
@@ -362,3 +359,26 @@ def getResolution(RecoMuon, prunedParticles, EtaRange = [0, 2.4],  PtRange=[5,10
             resolutionParam.matchedPtResolution.append((kMatchedReco.pt()-kMatchedGen.pt())/kMatchedGen.pt())
                 
     return resolutionParam 
+
+
+def getGenTrigger(min_pT, max_pT, min_dxy, max_eta, lxy, lz):
+    """
+    returns a flag corresponding to a trigger at gen level. 
+    Triggers implemented correspond to 2022.
+    """
+    #print(min_pT, max_pT, min_dxy, max_eta, lxy, lz)
+    triggerID = 0 #no trigger
+    if lxy < 600 and lz < 500:
+        if max_eta>2.0:
+            triggerID = 2 #decays in CMS but outside eta acceptance
+        else:
+            if min_pT > 10 and max_pT > 16 and min_dxy > 0.01:
+                triggerID = 5 #HLT_DoubleL3Mu16_10 MinDxy0p01cm
+            if min_pT > 10 and min_dxy > 1:
+                triggerID = 4 #HLT_DoubleL2Mu10 PromptVetoMinDxy1cm
+            if min_pT > 23:
+                triggerID = 3 #HLT_DoubleL2Mu23
+    else:
+        triggerID = 1 #decays outisde CMS
+
+    return triggerID
