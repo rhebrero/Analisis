@@ -99,6 +99,7 @@ labelBeamspot  = ("hltOnlineBeamSpot","", args.TRIGGERLABEL)
 
 #1D Histograms Gen Level
 
+h_pzProton  = createSimple1DPlot("h_pzProton", "p_{z} proton", 150, 6000, 7500., samples)
 h_massHiggs = createSimple1DPlot("h_massHiggs", "M_{H}", 200, 100., 1600., samples)
 h_massX     = createSimple1DPlot("h_massX", "M_{X}"    , 200, 0., 500., samples)
 h_ptX       = createSimple1DPlot("h_ptX", "p^{X}_{T}"  , 200, 0., 500., samples)
@@ -239,8 +240,10 @@ for index, ksample in enumerate(sampleName):
 
             if triggered == True:
                 for p in genParticles:
+                    #tellMeMore(p)
+                    if abs(p.pdgId()) == 2212:
+                        h_pzProton[index].Fill(abs(p.pz()))
                     if p.isHardProcess() or abs(p.pdgId()) in daughterPdgID: #sometimes (e.g RPV, the daughter does not appear as hard process)
-                        #tellMeMore(p)
                         if abs(p.pdgId()) in motherPdgID: #Plotting something from the Higgs, scalar Phi, or squark
                             h_massHiggs[index].Fill(p.mass())
                         if abs(p.pdgId()) in daughterPdgID: #Plotting something from the X, Zd, or chi_10 
@@ -445,6 +448,7 @@ for index, ksample in enumerate(sampleName):
 
 #makeSimple1DPlot(var, canvas, samples, title, xtitle, ytitle, output, folder, logy=False, showOnly = []):
 
+makeSimple1DPlot(h_pzProton, 'h_pzProton', samples, '', 'p_{z} proton', 'events', 'h_pzProton', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_massHiggs, 'h_massHiggs', samples, '', 'M_{Higgs}', 'events', 'h_massHiggs', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_massX, 'h_massX', samples, '', 'M_{X}', 'events', 'h_massX', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_ptX, 'h_ptX', samples, '', 'p^{X}_{T}', 'events', 'h_ptX', outFolder, logy=False, norm=False)
