@@ -36,9 +36,10 @@ def getMotherPdgID(p):
     return pdgID
     
 def tellMeMore(p):
-    print("pdgID: ", p.pdgId(), "mass:", round(p.mass(), 2), "pt:", round(p.pt(),2), "hardProcess:", p.isHardProcess())
+    print("pdgID: ", p.pdgId(), "mass:", round(p.mass(), 2), "pt:", round(p.pt(),2), "pz:", round(p.pz(),2), "hardProcess:", p.isHardProcess())
     ndaughters = len(p.daughterRefVector())
-    if p.pdgId() != 21:
+    if p.pdgId() != 21 and p.pdgId() != 2212:
+        #skip gluons and protons
         print("  mother id : "+str(round(p.mother(0).pdgId(),2)), " mother mass: "+str(round(p.mother(0).mass(),2)), "ndaughters: " + str(ndaughters))
         
 
