@@ -2,7 +2,7 @@ import os
 from argparse import ArgumentParser
 parser = ArgumentParser()
 parser.add_argument("-u", "--update", dest="update", default = "", help="updates a given folder in website", required=False)
-parser.add_argument("-s", "--keys", dest="keys", action="store_true", help="show registered keys and notes", required=False)
+parser.add_argument("-k", "--keys", dest="keys", action="store_true", help="show registered keys and notes", required=False)
 options = parser.parse_args()
 
 def addPlots(key, localFolder, remoteFolder, note = ""):
@@ -43,10 +43,12 @@ if (options.keys == True):
     print("Registerd keys \n")
     for index, folder in enumerate(folders):
         print("({INDEX}) KEY: {KEY}".format(INDEX=index+1, KEY=folder["key"]))
+        print("INFO: {NOTE}".format(NOTE=folder["note"]))
         print("REMOTE: {REMOTE}".format(REMOTE = folder["remoteFolder"]))
         print("LOCAL: {LOCAL}".format(LOCAL = folder["localFolder"]))
-        print("INFO: {NOTE}".format(NOTE=folder["note"]))
-        print("UPDATE: python updateWWW.py --update {KEY}\n".format(KEY=folder["key"]))
+        print("WEBPAGE: {WEBPAGE}".format(WEBPAGE=folder["localFolder"].replace("/Users/escalante/cernbox/www/", "https://escalant.web.cern.ch/escalant/")))
+        print("UPDATE: python updateWWW.py --update {KEY} \n".format(KEY=folder["key"]))
+
 
 #update plots in website
 if len(options.update) > 0:
