@@ -5,6 +5,7 @@ DDM/SimpleGenAnalysis/analyzers/myMathUtils.py
 DDM/SimpleGenAnalysis/analyzers/ResolutionUtils.py
 DDM/SimpleGenAnalysis/analyzers/SimpleTools.py
 DDM/SimpleGenAnalysis/analyzers/lxplusCondorSubmit.py
+DDM/SimpleGenAnalysis/analyzers/SamplesDatabase.py
 DDM/SimpleGenAnalysis/plotters/SimpleTools.py
 DDM/SimpleGenAnalysis/plotters/GenLongLivedUtils.py
 DDM/SimpleGenAnalysis/plotters/RecoUtils.py
