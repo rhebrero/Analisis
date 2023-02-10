@@ -1,6 +1,7 @@
 import os
 import argparse
 from SimpleTools import getSuffix
+from SamplesDatabase import samples_Benchmark, samples_HAHM, samples_RPV
 
 parser = argparse.ArgumentParser(description="creates submission scripts.")
 
@@ -55,9 +56,19 @@ def appendScript(jobs, squark, chi, ctau, version, model, nevents):
 
     return jobs 
 
-
 if options.RECENT == True or options.ALL == True:
     ## High priority task ##
+    for kSample in samples_RPV:
+        massSquark = kSample["massSquark"]
+        massChi = kSample["massChi"]
+        ctauChi = kSample["ctauChi"]
+
+        for index, kLifetime in enumerate(ctauChi):
+            if index == 1: #only middle lifetime
+                appendScript(jobs, massSquark,  massChi, kLifetime, "GS-27_11", "RPV", nevents)
+
+if options.ALL == True:
+    ## Already processed scripts ##
     for lifetime in [1, 100, 10000]:
         appendScript(jobs, 120,  48,  lifetime, "GS-14_11", "RPV", nevents)
         appendScript(jobs, 200,  48,  lifetime, "GS-14_11", "RPV", nevents)
@@ -67,24 +78,20 @@ if options.RECENT == True or options.ALL == True:
         appendScript(jobs, 440, 400,  lifetime, "GS-14_11", "RPV", nevents)
         appendScript(jobs, 550, 500,  lifetime, "GS-14_11", "RPV", nevents)
 
+    appendScript(jobs,  350,  148,  100, "GS-November2022_500", "RPV", nevents)
+    appendScript(jobs, 1000,  148,  100, "GS-November2022_50",  "RPV", nevents)
+    appendScript(jobs, 1500,  494,  100, "GS-November2022_50",  "RPV", nevents)
+
     appendScript(jobs, 125,  50,  500, "GS-November2022_500", "Benchmark", nevents)
     appendScript(jobs, 125,  20,  130, "GS-November2022_500", "Benchmark", nevents)
-
-    appendScript(jobs, 125,  30,  7e-09, "GS-hahm_16_11", "HAHM", nevents)
 
     appendScript(jobs, 125,  20,  2e-07, "GS-hahm_16_11", "HAHM", nevents)
     appendScript(jobs, 125,  20,  5e-07, "GS-hahm_16_11", "HAHM", nevents)
     appendScript(jobs, 125,  20,  1e-08, "GS-hahm_16_11", "HAHM", nevents)
     appendScript(jobs, 125,  20,  5e-08, "GS-hahm_16_11", "HAHM", nevents)
     
-if options.ALL == True:
-    ## Already processed scripts ##
-    appendScript(jobs,  350,  148,  100, "GS-November2022_500", "RPV", nevents)
-    appendScript(jobs, 1000,  148,  100, "GS-November2022_50",  "RPV", nevents)
-    appendScript(jobs, 1500,  494,  100, "GS-November2022_50",  "RPV", nevents)
+    appendScript(jobs, 125,  30,  7e-09, "GS-hahm_16_11", "HAHM", nevents)
     
-    appendScript(jobs, 125,  50,  500, "GS-November2022_500",  "Benchmark", nevents)
-
 for kjob in jobs:
     print(kjob)
     f.write(kjob)
