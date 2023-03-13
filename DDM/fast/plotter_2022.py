@@ -6,8 +6,10 @@ parser = ArgumentParser()
 parser.add_argument("-s", "--selection", dest="selection", default = "", help="creats script file for given selection and set of variables", required=False)
 parser.add_argument("-v", "--variable", dest="variable", default = "", help="creats script file for given variables", required=False)
 parser.add_argument("-i", "--info", dest="info", action="store_true", help="show all registered selections", required=False)
+parser.add_argument("-d", "--debug", dest="debug", action="store_true", default = False, help="debug, it does not create any folder", required=False)
 parser.add_argument("-y", "--year", dest="year", default="2022", help="2016, 2018, 2022(default), all", required=False)
 parser.add_argument("-pf","--plotsfolder", dest="plotsFolder", default="/users/alberto.escalante/plots/Run3/", help="base plots folder (selection folders will be created inside)", required=False)
+parser.add_argument("-sub", "--submit", dest="submit", action="store_true", default = False, help="submits to clip the created .sh script", required=False)
 options = parser.parse_args()
 
 def getNtuples(cut, rntuples_dir):
@@ -38,13 +40,15 @@ def getNtuples(cut, rntuples_dir):
 
     return my_rntuples_dir
     
-def makePlot(plotsFolder, script = "", year = "2022", cut = "", variable = "", dim_type = "dsa", flags = "--nomcbg --nosig --noratio", options = "", run = False):
+def makePlot(plotsFolder, script = "", year = "2022", cut = "", variable = "", dim_type = "dsa", flags = "--nomcbg --nosig --noratio", options_str = "", run = False):
     '''
     creates a python scripts to produce plots (to be submitted in batch system)
     '''
     
     #creates output folder (if it does not exist)
-    os.system("mkdir -p {OUTPUTFOLDER}".format(OUTPUTFOLDER = plotsFolder))
+    if options.debug == False:
+        #do not create the folder in debug mode
+        os.system("mkdir -p {OUTPUTFOLDER}".format(OUTPUTFOLDER = plotsFolder))
 
     #example to make plot
     #python3 plotstack.py --year 2022 -c BASE SS -x deltaphi -t dsa --nomcbg --nosig --noratio
@@ -79,9 +83,9 @@ def makePlot(plotsFolder, script = "", year = "2022", cut = "", variable = "", d
         print("  ncuts: ", ncuts)
         exit()
 
-    if len(options) >0:
+    if len(options_str) >0:
         #options are specified in variable, added to the command
-        command = command + " {OPTIONS}".format(OPTIONS = options)
+        command = command + " {OPTIONS_STR}".format(OPTIONS_STR = options_str)
 
     print(command)
     if run == True:
@@ -161,28 +165,42 @@ selections['base_selection_qcd']     = 'BASE SS DPHI'
 selections['base_selection_qcd_all'] = 'BASE SS DPHI'
 
 #validation regions
-selections['base_selection_qcd_IDETANDTIDETASEG'] = 'REP LXYE MASS CHI2 COSA LXYS DCA IDETANDTIDETASEG DSATIME DIR BBDSATIMEDIFF'
+selections['base_selection_qcd_IDETANDTIDETASEG'] = 'REP LXYE MASS CHI2 COSA LXYS DCA IDETANDTIDETASEG SEG DSATIME DIR BBDSATIMEDIFF'
+selections['base_selection_qcd_IDETANDTIDETASEG_noSEG'] = 'REP LXYE MASS CHI2 COSA LXYS DCA IDETANDTIDETASEG DSATIME DIR BBDSATIMEDIFF'
 selections['base_selection_qcd_IMASS']            = 'REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF'
 selections['base_selection_dy_ILXYS']             = 'REP LXYE MASS CHI2 COSA ILXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF'
 
 #cosmic ray selection
 selections['base_selection_cosmic'] = 'REP LXYE MASS CHI2 ICOSA LXYS DCA DETANDT DETASEG SEG IDSATIME IDPHI'
 
-#validation regions (overlays)
-selections['base_overlay_qcd_IDETANDTIDETASEG_OS_SS'] = 'REP LXYE MASS CHI2 COSA LXYS DCA IDETANDTIDETASEG DSATIME DIR BBDSATIMEDIFF, OS SS'
+#validation regions 2018 (overlays)
+selections['base_overlay_qcd_IDETANDTIDETASEG_OS_SS'] = 'REP LXYE MASS CHI2 COSA LXYS DCA IDETANDTIDETASEG SEG DSATIME DIR BBDSATIMEDIFF, OS SS'
 selections['base_overlay_qcd_IMASS_OS_SS']            = 'REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF, OS SS'
-selections['base_overlay_dy_ILXYS_DPHI_IDPHI3']        = 'REP LXYE MASS CHI2 COSA ILXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF, DPHI IDPHI3'
-selections['base_overlay_dy_ILXYS_DPHI1_IDPHI2']        = 'REP LXYE MASS CHI2 COSA ILXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF, DPHI1 IDPHI2'
 
-selections['base_overlay_qcd_IDETANDTIDETASEG_DSAISO0P1_IDSAISO0P1'] = 'REP LXYE MASS CHI2 COSA LXYS DCA IDETANDTIDETASEG DSATIME DIR BBDSATIMEDIFF, DSAISO0P1 IDSAISO0P1'
-selections['base_overlay_qcd_IMASS_DSAISO0P1_IDSAISO0P1']            = 'REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF, DSAISO0P1 IDSAISO0P1'
 
-selections['base_overlay_qcd_IDETANDTIDETASEG_SS_DSAISO0P1_IDSAISO0P1'] = 'REP LXYE MASS CHI2 COSA LXYS DCA IDETANDTIDETASEG DSATIME DIR BBDSATIMEDIFF SS, DSAISO0P1 IDSAISO0P1'
-selections['base_overlay_qcd_IMASS_SS_DSAISO0P1_IDSAISO0P1']            = 'REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF SS, DSAISO0P1 IDSAISO0P1'
-selections['base_overlay_qcd_BASE_SS_DSAISO0P1_IDSAISO0P1']             = 'REP LXYE MASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF SS, DSAISO0P1 IDSAISO0P1'
+#DY measurement region (overlay) - 2022
+selections['base_overlay_dy_ILXYS_DPHI_IDPHI3']   = 'REP LXYE MASS CHI2 COSA ILXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF DSAISO0P1, DPHI IDPHI3'
+selections['base_overlay_dy_ILXYS_DPHI1_IDPHI2']  = 'REP LXYE MASS CHI2 COSA ILXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF DSAISO0P1, DPHI1 IDPHI2'
 
-selections['base_overlay_qcd_IDETANDTIDETASEG_OS_DSAISO0P1_IDSAISO0P1'] = 'REP LXYE MASS CHI2 COSA LXYS DCA IDETANDTIDETASEG DSATIME DIR BBDSATIMEDIFF OS, DSAISO0P1 IDSAISO0P1'
-selections['base_overlay_qcd_IMASS_OS_DSAISO0P1_IDSAISO0P1']            = 'REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF OS, DSAISO0P1 IDSAISO0P1'
+selections['base_overlay_dy_PATPAT_DPHI_IDPHI3']  = 'DSA3  LXYE MASS CHI2 COSA DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF OS DYTFPATCUTS DSAISO0P1, DPHI IDPHI3'
+selections['base_overlay_dy_PATPAT_DPH1_IDPHI2']  = 'DSA3  LXYE MASS CHI2 COSA DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF OS DYTFPATCUTS DSAISO0P1, DPHI1 IDPHI2'
+
+selections['base_overlay_dy_HYB_DPHI_IDPHI3']     = 'DSA11 LXYE MASS CHI2 COSA DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF OS DYTFHYBCUTS DSAISO0P1, DPHI IDPHI3'
+selections['base_overlay_dy_HYB_DPHI1_IDPHI2']    = 'DSA11 LXYE MASS CHI2 COSA DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF OS DYTFHYBCUTS DSAISO0P1, DPHI1 IDPHI2'
+
+#validation regions isolation - 2022
+selections['base_overlay_qcd_IDETANDTIDETASEG_DSAISO0P1_IDSAISO0P1']       = 'REP LXYE MASS  CHI2 COSA LXYS DCA IDETANDTIDETASEG SEG DSATIME DIR BBDSATIMEDIFF, DSAISO0P1 IDSAISO0P1'
+selections['base_overlay_qcd_IDETANDTIDETASEG_noSEG_DSAISO0P1_IDSAISO0P1'] = 'REP LXYE MASS  CHI2 COSA LXYS DCA IDETANDTIDETASEG DSATIME DIR BBDSATIMEDIFF, DSAISO0P1 IDSAISO0P1'
+selections['base_overlay_qcd_IMASS_DSAISO0P1_IDSAISO0P1']            = 'REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG  SEG DSATIME DIR BBDSATIMEDIFF, DSAISO0P1 IDSAISO0P1'
+
+selections['base_overlay_qcd_IDETANDTIDETASEG_SS_DSAISO0P1_IDSAISO0P1']       = 'REP LXYE CHI2 COSA LXYS DCA IDETANDTIDETASEG SEG DSATIME DIR BBDSATIMEDIFF DPHI SS, DSAISO0P1 IDSAISO0P1'
+selections['base_overlay_qcd_IDETANDTIDETASEG_noSEG_SS_DSAISO0P1_IDSAISO0P1'] = 'REP LXYE CHI2 COSA LXYS DCA IDETANDTIDETASEG DSATIME DIR BBDSATIMEDIFF DPHI SS, DSAISO0P1 IDSAISO0P1'
+selections['base_overlay_qcd_IMASS_SS_DSAISO0P1_IDSAISO0P1']            = 'REP LXYE CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF DPHI SS, DSAISO0P1 IDSAISO0P1'
+selections['base_overlay_qcd_BASE_SS_DSAISO0P1_IDSAISO0P1']             = 'REP LXYE MASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF DPHI SS, DSAISO0P1 IDSAISO0P1'
+
+selections['base_overlay_qcd_IDETANDTIDETASEG_OS_DSAISO0P1_IDSAISO0P1']       = 'REP LXYE CHI2 COSA LXYS DCA IDETANDTIDETASEG SEG DSATIME DIR BBDSATIMEDIFF DPHI OS, DSAISO0P1 IDSAISO0P1'
+selections['base_overlay_qcd_IDETANDTIDETASEG_noSEG_OS_DSAISO0P1_IDSAISO0P1'] = 'REP LXYE CHI2 COSA LXYS DCA IDETANDTIDETASEG DSATIME DIR BBDSATIMEDIFF DPHI OS, DSAISO0P1 IDSAISO0P1'
+selections['base_overlay_qcd_IMASS_OS_DSAISO0P1_IDSAISO0P1']            = 'REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF DPHI OS, DSAISO0P1 IDSAISO0P1'
 
 if options.info == True:
     showSelections(selections)
@@ -199,11 +217,19 @@ addVariable(variables, "lxypv_v2", "-x1 0 -x2 300")
 addVariable(variables, "lxypv_v3", "-x1 0 -x2 600")
 addVariable(variables, "lxysigpv")
 addVariable(variables, "lxysigpv_v1", "-x1 0 -x2 200")
+addVariable(variables, "lxysigpv_v2", "-x1 0 -x2 6 -nx 6")
+addVariable(variables, "lxysigpv_v3", "-x1 0 -x2 60 -nx 20")
 addVariable(variables, "mass")
 addVariable(variables, "mass_v1", "-x1 0 -x2 300")
 addVariable(variables, "mass_v2", "-x1 0 -x2 10 -nx 10")
 addVariable(variables, "mass_v3", "-x1 6 -x2 10 -nx 4")
 addVariable(variables, "mass_v4", "-xe 0 10 30 60 80")
+addVariable(variables, "mass_v5", "-xe 6 10 30 60 80")
+addVariable(variables, "mass_v6", "-xe 0 2 4 6 10 30 40 50")
+addVariable(variables, "mass_v7", "-x1 0 -x2 60 -nx 6")
+addVariable(variables, "mass_v8", "-x1 5 -x2 10 -nx 5")
+addVariable(variables, "mass_v9", "-x1 0 -x2 60 -nx 12")
+addVariable(variables, "mass_v10", "-xe 0 5 10 20 30 40 50 60 ")
 addVariable(variables, "qsum")
 addVariable(variables, "dca")
 addVariable(variables, "dca_v1", "-x1 0 -x2 100")
@@ -211,6 +237,8 @@ addVariable(variables, "deltaphi")
 addVariable(variables, "dimdeltaeta")
 addVariable(variables, "minpt")
 addVariable(variables, "minpt_v1", "-x1 0 -x2 300")
+addVariable(variables, "minpt_v2", "-x1 0 -x2 60 -nx 12")
+addVariable(variables, "eta")
 addVariable(variables, "vtxnormchi2")
 addVariable(variables, "muon_iso")
 addVariable(variables, "muon_iso", "-x1 0 -x2 5")
@@ -219,6 +247,7 @@ addVariable(variables, "minmuon_iso")
 addVariable(variables, "dim_isoPmumu")
 addVariable(variables, "dim_isoLxy")
 addVariable(variables, "deltar")
+addVariable(variables, "deltar_v2", "-x1 0 -x2 0.5 -nx 20")
 addVariable(variables, "timediff")
 addVariable(variables, "maxabstime")
 addVariable(variables, "minbbdsatimediff")
@@ -241,6 +270,9 @@ addVariable(variables, "dim_isoPmumu,dim_isoLxy"    )
 addVariable(variables, "muon_iso,muon_iso"          )
 addVariable(variables, "corr_muon_iso,corr_muon_iso")
 addVariable(variables, "maxcorr_muon_iso,PATmass"   )
+addVariable(variables, "dimdeltaeta,dimnseg"   )
+addVariable(variables, "dimdeltaeta,dthitscschits0"   )
+addVariable(variables, "dimdeltaeta,mindthitscschits0"   )
 
 plotsFolder = options.plotsFolder
 if plotsFolder[-1] != "/": plotsFolder = plotsFolder + "/"
@@ -269,12 +301,11 @@ for selection in selections.keys():
             continue
         if skipVariable(selections[selection], variable, dsapatlink_required) == True:
             #removes pairs selection - variable that do not make sense
-            continue
+            continue        
         if nselections == 1:
             nvariables = nvariables + 1
-        #print(selection, variable)
         for year in years:
-            command = makePlot(plotsFolder = plotsFolder + selection, year = year, cut = selections[selection], variable = clearVersion(variable), dim_type = "dsa", options = variables[variable], run = False)
+            command = makePlot(plotsFolder = plotsFolder + selection, year = year, cut = selections[selection], variable = clearVersion(variable), dim_type = "dsa", options_str = variables[variable], run = False)
             njobs = njobs +1
             jobs.write(command +"\n")
         
@@ -284,7 +315,9 @@ print("\n =============")
 print("above list of jobs contains Nselections = {NSELECTIONS}, Nvariables = {NVARIABLES}, Year = {YEAR}, Njobs = {NJOBS} and can be submitted as ".format(NSELECTIONS = nselections, NVARIABLES = nvariables, YEAR = options.year, NJOBS = njobs))
 print("python lxplusCondorSubmit.py --clip --inputFile run_plotter_2022.sh")
 print(" =============\n")
-
+if options.submit == True and options.debug == False:
+    #if submit option
+    os.system("python3 lxplusCondorSubmit.py --clip --inputFile run_plotter_2022.sh")
 
 ##TODO: Implement overlaid
 #python plotoverlaidcuts.py -x mass --year 2022 --dir /users/alberto.escalante/plots/Run3/debug -c REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF --dcuts OS SS --nomcbg --nosig -t dsa -x1 0 -x2 10
