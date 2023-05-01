@@ -5,9 +5,14 @@ from SamplesDatabase import samples_Benchmark, samples_HAHM, samples_RPV
 
 parser = argparse.ArgumentParser(description="creates submission scripts.")
 
-parser.add_argument('--recent'    , dest='RECENT'   , action='store_true'     , default=False, help = 'submission script contains "recent" jobs')
-parser.add_argument('--all'       , dest='ALL'      , action='store_true'     , default=False, help = 'submission script contains "all" jobs')
-parser.add_argument('--nevents'   , dest='NEVENTS'  , default=-1              , help = 'number of processed events')
+parser.add_argument('--subset'    , dest='SUBSET'      , action='store_true'  , default=False, help = 'use a subset of samples, defined inside the script')
+parser.add_argument('--nevents'   , dest='NEVENTS'     , default=-1           , help = 'number of processed events')
+parser.add_argument('--folderEOS', dest='FOLDER_EOS'  , default='GS-27_11'   , help = 'eos folder, where samples are stored, default: GS-27_11')
+#RPV
+parser.add_argument('--lifetime'  , dest='LIFETIME' , default=-1              , help = 'lifetime point. Valid arguments: 0, 1, 2, and 3 (only for dark photon)')
+parser.add_argument('--massChi'   , dest='MASS_CHI' , default=-1              , help = 'chi mass')
+parser.add_argument('--massSquark', dest='MASS_SQUARK' , default=-1           , help = 'squark mass')
+
 options = parser.parse_args()
 
 jobs = []
@@ -56,19 +61,20 @@ def appendScript(jobs, squark, chi, ctau, version, model, nevents):
 
     return jobs 
 
-if options.RECENT == True or options.ALL == True:
-    ## High priority task ##
-    for kSample in samples_RPV:
-        massSquark = kSample["massSquark"]
-        massChi = kSample["massChi"]
-        ctauChi = kSample["ctauChi"]
+## High priority task ##
+for kSample in samples_RPV:
+    massSquark = kSample["massSquark"]
+    massChi = kSample["massChi"]
+    ctauChi = kSample["ctauChi"]
+    if int(options.MASS_SQUARK) > 0 and  int(options.MASS_SQUARK) != int(massSquark): continue #select specific mass_squark
+    if int(options.MASS_CHI) > 0 and int(options.MASS_CHI) != int(massChi): continue #select specific mass_chi
 
-        for index, kLifetime in enumerate(ctauChi):
-            if index == 1: #only middle lifetime
-                appendScript(jobs, massSquark,  massChi, kLifetime, "GS-27_11", "RPV", nevents)
+    for index, kLifetime in enumerate(ctauChi):
+        if int(options.LIFETIME) > 0 and int(options.LIFETIME) != kLifetime: continue #select specific lifetime
+        appendScript(jobs, massSquark,  massChi, kLifetime, options.FOLDER_EOS, "RPV", nevents)
 
-if options.ALL == True:
-    ## Already processed scripts ##
+if options.SUBSET == True:
+    ## Sandbox of samples...  ##
     for lifetime in [1, 100, 10000]:
         appendScript(jobs, 120,  48,  lifetime, "GS-14_11", "RPV", nevents)
         appendScript(jobs, 200,  48,  lifetime, "GS-14_11", "RPV", nevents)
