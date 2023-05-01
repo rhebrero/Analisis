@@ -19,7 +19,8 @@ jobs = []
 f = open("jobs.sh", "w")
 scriptName = "SimpleGenTriggerSim_RPVvsBenchmark.py"
 nevents = options.NEVENTS
-    
+print("Configured EOS samples: {FOLDER_EOS} \n".format(FOLDER_EOS=options.FOLDER_EOS))
+
 def appendScript(jobs, squark, chi, ctau, version, model, nevents):
     '''
     appends a job defined in command variable to a dictionary
