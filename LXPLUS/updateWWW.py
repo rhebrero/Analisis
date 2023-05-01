@@ -37,6 +37,7 @@ def updatePlots(key, folders):
 #Registed plots in website
 folders = []
 folders.append(addPlots("run3data", "/Users/escalante/cernbox/www/protected/ddm/run3data/Run3/", "alberto.escalante@clip-login-0.cbe.vbc.ac.at:/users/alberto.escalante/plots/Run3/", "Jan22"))
+folders.append(addPlots("run3data_FG", "/Users/escalante/cernbox/www/protected/ddm/run3data/Run3_FG/", "alberto.escalante@clip-login-0.cbe.vbc.ac.at:/users/alberto.escalante/plots/Run3_FG/", "Mar14"))
 
 ## show database
 if (options.keys == True):
