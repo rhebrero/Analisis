@@ -26,7 +26,7 @@ def getNtuples(cut, rntuples_dir):
             my_rntuples_dir = my_rntuples_dir.replace("TSTAT_ISTM_", "")
 
     #getting appropiate skim rNtuple
-    if "LXYS " not in cut:
+    if "LXYS " not in cut and "BASE" not in cut:
         my_rntuples_dir = my_rntuples_dir.replace("LxySig6.0", "LxySig0.0")
     if "ILXYS " in cut:
         my_rntuples_dir = my_rntuples_dir.replace("LxySig6.0", "LxySig0.0")
@@ -57,7 +57,6 @@ def makePlot(plotsFolder, script = "", year = "2022", cut = "", variable = "", d
 
     nvariables = variable.split(",")
     ncuts = cut.split(",")
-
     if len(nvariables) == 1 and len(ncuts) == 1:
         script = "plotstack.py"
         varx = variable
