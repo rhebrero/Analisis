@@ -31,7 +31,7 @@ import argparse
 parser = argparse.ArgumentParser(description="Simple gen analyzer, compatible with RPV, Benchmark and Darkphoton")
 
 parser.add_argument('--inputFile'    , dest='INPUTFILE'    , default=''         , help='input file')
-parser.add_argument('--process'      , dest='PROCESS'      , default=''         , help='process to be written in histograms')
+#parser.add_argument('--process'      , dest='PROCESS'      , default=''         , help='process to be written in histograms')
 parser.add_argument('--trigger'      , dest='TRIGGER'      , default=''         , help='input file (with scripts to run on)')
 parser.add_argument('--label'        , dest='LABEL'        , default=''         , help='suffix for histograms and output folder')
 parser.add_argument('--color'        , dest='COLOR'        , default=1          , help='color')
@@ -43,8 +43,8 @@ parser.add_argument('--LHE '         , dest='LHE'          , default=False      
 
 args = parser.parse_args()
 
-if (len(args.INPUTFILE) == 0 or len(args.OUTFOLDER) == 0 or len(args.LABEL) == 0 or len(args.PROCESS) ==0 ):
-    print ("provide minimum arguments: --inputFile, --process, --label, --outFolder")
+if (len(args.INPUTFILE) == 0 or len(args.OUTFOLDER) == 0 or len(args.LABEL) == 0):
+    print ("provide minimum arguments: --inputFile, --label, --outFolder")
     quit()
 
 print ("running on jobs in {INPUTFILE}".format(INPUTFILE=args.INPUTFILE) )
@@ -63,7 +63,7 @@ samples = Sample()
 
 import pdb
 #samples.AddSample(args.INPUTFILE    , 'M_{H}=125, M_{X}=20, ALL'               , '125_20_CTau_130cm_ALL'         , 1)
-samples.AddSample(args.INPUTFILE    , args.PROCESS + "_"+ args.LABEL           , args.PROCESS + "_"+ args.LABEL  , int(args.COLOR))
+samples.AddSample(args.INPUTFILE    , args.LABEL           , args.LABEL  , int(args.COLOR))
 #samples.AddSample(samplesDir+ signal, 'L1'                                     , '125_20_CTau_130cm_L1'          , 14) # Gray
 #samples.AddSample(samplesDir+ signal, 'L2'                                     , '125_20_CTau_130cm_L2'          , 2)  # Red
 #samples.AddSample(samplesDir+ signal, 'L2VetoPrompt'                           , '125_20_CTau_130cm_L2VetoPrompt', 4)  # Blue
@@ -120,7 +120,11 @@ h_minptMuons   = createSimple1DPlot("", "h_minptMuons" ,  60,  0.,  60., samples
 h_minptMuons_l = createSimple1DPlot("", "h_minptMuons_l" , 200,  0., 200., samples)
 h_maxptMuons   = createSimple1DPlot("", "h_maxptMuons" ,  60,  0.,  60., samples)
 h_dimumass    = createSimple1DPlot("", "h_dimumass"    , 120, 0., 120., samples)
+h_corrdimumass = createSimple1DPlot("", "h_corrdimumass"    , 120, 0., 120., samples)
+h_corrdimumass_2d = createSimple1DPlot("", "h_corrdimumass_2d"    , 120, 0., 120., samples)
 h_dimumass_l  = createSimple1DPlot("", "h_dimumass_l"  , 500, 0., 500., samples)
+h_corrdimumass_l  = createSimple1DPlot("", "h_corrdimumass_l"  , 500, 0., 500., samples)
+h_corrdimumass_2d_l  = createSimple1DPlot("", "h_corrdimumass_2d_l"  , 500, 0., 500., samples)
 h_dimupt     = createSimple1DPlot("", "h_dimupt"       , 120, 0., 120., samples)
 h_proptime   = createSimple1DPlot("", "h_proptime"     , 120, 0., 120., samples)
 h_proptime_l = createSimple1DPlot("", "h_proptime_l"   , 500, 0., 500., samples)
@@ -291,7 +295,9 @@ for index, ksample in enumerate(sampleName):
                                     #print ("pTs of final state muons:", round(fsmuons[0].pt(),2), round(fsmuons[1].pt(),2))
                                     dimu_px = fsmuons[0].px() + fsmuons[1].px()
                                     dimu_py = fsmuons[0].py() + fsmuons[1].py()
+                                    dimu_pz = fsmuons[0].pz() + fsmuons[1].pz()
                                     dimu_pt = sqrt(dimu_px**2 + dimu_py**2)
+                                    dimu_p = sqrt(dimu_px**2 + dimu_py**2 + dimu_pz**2)
                                     dimu_mass = mass(fsmuons[0], fsmuons[1])
 
                                     #minimum
@@ -406,12 +412,17 @@ for index, ksample in enumerate(sampleName):
                                         print ("+++ two daughter muons are not produced at the same vertex +++")
                                     else:
                                         cosdphi = (fsmuons[0].vx()*dimu_px + fsmuons[0].vy()*dimu_py)/fsmuons[0].vertex().rho()/dimu_pt
-                                        #print(cosdphi)
+                                        cosdtheta = (fsmuons[0].vx()*dimu_px + fsmuons[0].vy()*dimu_py + fsmuons[0].vz()*dimu_pz)/sqrt(fsmuons[0].vertex().rho()**2+fsmuons[0].vertex().Z()**2)/dimu_p
+                                        print(cosdphi, cosdtheta)
                                         #print(cosdphi, acos(cosdphi))
-                                        if cosdphi > 1.0 : cosdphi  =  0.9999 #protection against rounding
-                                        if cosdphi < -1.0: cosdphi  = -0.9999 #protection against rounding
+                                        if cosdphi > 1.0 : cosdphi  =  0.9999     #protection against rounding
+                                        if cosdphi < -1.0: cosdphi  = -0.9999     #protection against rounding
+                                        if cosdtheta > 1.0 : cosdtheta  =  0.9999 #protection against rounding
+                                        if cosdtheta < -1.0: cosdtheta  = -0.9999 #protection against rounding
                                             
                                         dphi = acos(cosdphi)
+                                        dtheta = acos(cosdtheta)
+                                        
                                         #print ("dimu_pt =", dimu_pt, "cos(dphi) =", cosdphi, "dphi =", dphi)
                                         h_lxy_s[index].Fill(fsmuons[0].vertex().rho())
                                         h_lxy[index].Fill(fsmuons[0].vertex().rho())
@@ -422,7 +433,20 @@ for index, ksample in enumerate(sampleName):
                                         h_dimumass[index].Fill(dimu_mass)
                                         h_dimumass_l[index].Fill(dimu_mass)
                                         h_dimupt[index].Fill(dimu_pt)
-
+                                        #################
+                                        # corrected mass#                                        
+                                        #################
+                                        #import pdb
+                                        corr_mass_2d = sqrt(dimu_mass**2+sin(dphi)*sin(dphi)*dimu_pt**2)+dimu_pt*sin(dphi)
+                                        corr_mass = sqrt(dimu_mass**2+sin(dtheta)*sin(dtheta)*dimu_p**2)+dimu_p*sin(dtheta)
+                                        h_corrdimumass_2d[index].Fill(corr_mass_2d)
+                                        h_corrdimumass_2d_l[index].Fill(corr_mass_2d)
+                                        h_corrdimumass[index].Fill(corr_mass)
+                                        h_corrdimumass_l[index].Fill(corr_mass)
+                                        print(massX, dimu_mass, corr_mass_2d, corr_mass)
+                                        #pdb.set_trace()
+                                        
+                                        #################
                                         h_proptime[index].Fill(fsmuons[0].vertex().rho()*10*massX/ptX) #convert lxy from cm to mm
                                         h_proptime_l[index].Fill(fsmuons[0].vertex().rho()*10*massX/ptX) #convert lxy from cm to mm
 
@@ -444,7 +468,6 @@ for index, ksample in enumerate(sampleName):
     print ("SAMPLE ", ksample)
     print ("PROCESSED ", count_events, "events")
     print ("\n")
-
 
 #makeSimple1DPlot(var, canvas, samples, title, xtitle, ytitle, output, folder, logy=False, showOnly = []):
 
@@ -468,7 +491,11 @@ makeSimple1DPlot(h_minptMuons, 'h_minptMuons', samples, '', 'min pT [GeV]', '', 
 makeSimple1DPlot(h_minptMuons_l, 'h_minptMuons_l', samples, '', 'min pT [GeV]', '', 'h_minptMuons_l', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_maxptMuons, 'h_maxptMuons', samples, '', 'max pT [GeV]', '', 'h_maxptMuons', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_dimumass, 'h_dimumass', samples, '', 'm_{#mu#mu} [GeV]', '', 'h_dimumass', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_corrdimumass, 'h_corrdimumass', samples, '', 'corr. m_{#mu#mu} [GeV]', '', 'h_corrdimumas', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_corrdimumass_2d, 'h_corrdimumass_2d', samples, '', 'corr. m_{#mu#mu} 2d [GeV]', '', 'h_corrdimumas_2d', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_dimumass_l, 'h_dimumass_l', samples, '', 'm_{#mu#mu} [GeV]', '', 'h_dimumass_l', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_corrdimumass_l, 'h_corrdimumass_l', samples, '', 'corr. m_{#mu#mu} [GeV]', '', 'h_corrdimumass_l', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_corrdimumass_2d_l, 'h_corrdimumass_2d_l', samples, '', 'corr. m_{#mu#mu} 2d [GeV]', '', 'h_corrdimumass_2d_l', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_dimupt, 'h_dimupt', samples, '', 'dim p_{T} [GeV]', '', 'h_dimupt', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_proptime, 'h_proptime', samples, '', 'prop.time', '', 'h_proptime', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_proptime_l, 'h_proptime_l', samples, '', 'prop.time', '', 'h_proptime_l', outFolder, logy=True, norm=False)
