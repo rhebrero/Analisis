@@ -52,3 +52,8 @@ samples_RPV.append({"massSquark": 1600, "massChi":  500, "ctauChi":[20, 200, 200
 samples_RPV.append({"massSquark": 1600, "massChi":  950, "ctauChi":[40, 400, 4000], "nevents":50000})
 samples_RPV.append({"massSquark": 1600, "massChi": 1400, "ctauChi":[60, 600, 6000], "nevents":50000})
 samples_RPV.append({"massSquark": 1600, "massChi": 1575, "ctauChi":[70, 700, 7000], "nevents":50000})
+
+#####################
+samples_2022 = []
+#/store/user/sonawane/Muon/PATFilter_MuonRun2022F-PromptReco-v1_012023-v01/230130_163630/0000/pat_927.root
+samples_2022.append({"era": "MuonRun2022F"})
