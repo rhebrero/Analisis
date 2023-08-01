@@ -60,7 +60,7 @@ def makePlot(plotsFolder, script = "", year = "2022", cut = "", variable = "", d
     if len(nvariables) == 1 and len(ncuts) == 1:
         script = "plotstack.py"
         varx = variable
-        command = "python3 {SCRIPT} -d {OUTPUTFOLDER} --samplepath {SAMPLEPATH} --year {YEAR} -c {CUTS} -x {VARX} -t {DIM_TYPE} {FLAGS}".format(SCRIPT = script, OUTPUTFOLDER = plotsFolder, SAMPLEPATH = samplepath, YEAR = year, CUTS = cut, VARX = varx, DIM_TYPE = dim_type, FLAGS = flags)
+        command = "python {SCRIPT} -d {OUTPUTFOLDER} --samplepath {SAMPLEPATH} --year {YEAR} -c {CUTS} -x {VARX} -t {DIM_TYPE} {FLAGS}".format(SCRIPT = script, OUTPUTFOLDER = plotsFolder, SAMPLEPATH = samplepath, YEAR = year, CUTS = cut, VARX = varx, DIM_TYPE = dim_type, FLAGS = flags)
 
     elif len(nvariables) == 1 and len(ncuts)==2:
         #python plotoverlaidcuts.py -x mass --year 2022 --dir /users/alberto.escalante/plots/Run3/debug -c REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF --dcuts OS SS --nomcbg --nosig -t dsa -x1 0 -x2 10
@@ -68,14 +68,14 @@ def makePlot(plotsFolder, script = "", year = "2022", cut = "", variable = "", d
         varx = variable
         cutbase  = ncuts[0]
         cutextra = ncuts[1]
-        command = "python3 {SCRIPT} -d {OUTPUTFOLDER} --samplepath {SAMPLEPATH} --year {YEAR} -c {CUTS} -x {VARX} -t {DIM_TYPE} --dcuts {CUTEXTRA} {FLAGS}".format(SCRIPT = script, OUTPUTFOLDER = plotsFolder, SAMPLEPATH = samplepath, YEAR = year, CUTS = cutbase, VARX = varx, CUTEXTRA = cutextra, DIM_TYPE = dim_type, FLAGS = flags + "--legpos bl")
+        command = "python {SCRIPT} -d {OUTPUTFOLDER} --samplepath {SAMPLEPATH} --year {YEAR} -c {CUTS} -x {VARX} -t {DIM_TYPE} --dcuts {CUTEXTRA} {FLAGS}".format(SCRIPT = script, OUTPUTFOLDER = plotsFolder, SAMPLEPATH = samplepath, YEAR = year, CUTS = cutbase, VARX = varx, CUTEXTRA = cutextra, DIM_TYPE = dim_type, FLAGS = flags + "--legpos bl")
         #at the moment --noratio option is supported
         command = command.replace("--noratio", "")
     elif len(nvariables) == 2 and len(ncuts) == 1:
         script = "plot2d.py"
         varx = nvariables[0]
         vary = nvariables[1]
-        command = "python3 {SCRIPT} -d {OUTPUTFOLDER} --samplepath {SAMPLEPATH} --year {YEAR} -c {CUTS} -x {VARX} -y {VARY} -t {DIM_TYPE} {FLAGS}".format(SCRIPT = script, OUTPUTFOLDER = plotsFolder, SAMPLEPATH = samplepath, YEAR = year, CUTS = cut, VARX = varx, VARY = vary, DIM_TYPE = dim_type, FLAGS = flags.replace("--noratio", ""))
+        command = "python {SCRIPT} -d {OUTPUTFOLDER} --samplepath {SAMPLEPATH} --year {YEAR} -c {CUTS} -x {VARX} -y {VARY} -t {DIM_TYPE} {FLAGS}".format(SCRIPT = script, OUTPUTFOLDER = plotsFolder, SAMPLEPATH = samplepath, YEAR = year, CUTS = cut, VARX = varx, VARY = vary, DIM_TYPE = dim_type, FLAGS = flags.replace("--noratio", ""))
     else:
         print("ERROR: number of variables or script cannot be identified")
         print("  nvariables: ", nvariables)
@@ -176,7 +176,6 @@ selections['base_selection_cosmic'] = 'REP LXYE MASS CHI2 ICOSA LXYS DCA DETANDT
 selections['base_overlay_qcd_IDETANDTIDETASEG_OS_SS'] = 'REP LXYE MASS CHI2 COSA LXYS DCA IDETANDTIDETASEG SEG DSATIME DIR BBDSATIMEDIFF, OS SS'
 selections['base_overlay_qcd_IMASS_OS_SS']            = 'REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF, OS SS'
 
-
 #DY measurement region (overlay) - 2022
 selections['base_overlay_dy_ILXYS_DPHI_IDPHI3']   = 'REP LXYE MASS CHI2 COSA ILXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF DSAISO0P1, DPHI IDPHI3'
 selections['base_overlay_dy_ILXYS_DPHI1_IDPHI2']  = 'REP LXYE MASS CHI2 COSA ILXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF DSAISO0P1, DPHI1 IDPHI2'
@@ -200,6 +199,12 @@ selections['base_overlay_qcd_BASE_SS_DSAISO0P1_IDSAISO0P1']             = 'REP L
 selections['base_overlay_qcd_IDETANDTIDETASEG_OS_DSAISO0P1_IDSAISO0P1']       = 'REP LXYE CHI2 COSA LXYS DCA IDETANDTIDETASEG SEG DSATIME DIR BBDSATIMEDIFF DPHI OS, DSAISO0P1 IDSAISO0P1'
 selections['base_overlay_qcd_IDETANDTIDETASEG_noSEG_OS_DSAISO0P1_IDSAISO0P1'] = 'REP LXYE CHI2 COSA LXYS DCA IDETANDTIDETASEG DSATIME DIR BBDSATIMEDIFF DPHI OS, DSAISO0P1 IDSAISO0P1'
 selections['base_overlay_qcd_IMASS_OS_DSAISO0P1_IDSAISO0P1']            = 'REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF DPHI OS, DSAISO0P1 IDSAISO0P1'
+
+#partial unblind of 2022 data
+selections['base_signalregion_rpv']       = 'BASE LXYE20 OS DPHI MASS15 DSAISO0p15 UNBLIND30'
+selections['base_signalregion_zd']      = 'BASE LXYE20 OS DPHIb10 DSAISO0p15 UNBLIND30'
+selections['base_signalregion_run2']      = 'BASE OS UNBLIND30'
+
 
 if options.info == True:
     showSelections(selections)
@@ -239,12 +244,12 @@ addVariable(variables, "minpt_v1", "-x1 0 -x2 300")
 addVariable(variables, "minpt_v2", "-x1 0 -x2 60 -nx 12")
 addVariable(variables, "eta")
 addVariable(variables, "vtxnormchi2")
-addVariable(variables, "muon_iso")
-addVariable(variables, "muon_iso", "-x1 0 -x2 5")
-addVariable(variables, "maxmuon_iso")
-addVariable(variables, "minmuon_iso")
-addVariable(variables, "dim_isoPmumu")
-addVariable(variables, "dim_isoLxy")
+addVariable(variables, "muoniso")
+addVariable(variables, "muoniso", "-x1 0 -x2 5")
+addVariable(variables, "maxmuoniso")
+addVariable(variables, "minmuoniso")
+#addVariable(variables, "dim_isoPmumu")
+#addVariable(variables, "dim_isoLxy")
 addVariable(variables, "deltar")
 addVariable(variables, "deltar_v2", "-x1 0 -x2 0.5 -nx 20")
 addVariable(variables, "timediff")
@@ -254,24 +259,25 @@ addVariable(variables, "minbbdsatimediff")
 ## special variables
 #Need DSAPAT-LINK
 dsapatlink_required = ["REP BASE"] #do not plot if those cuts are included
-addVariable(variables, "ass_eta", "-x1 0 -x2 0.5", group_type = dsapatlink_required)
-addVariable(variables, "ass_phi", "-x1 0 -x2 0.5", group_type = dsapatlink_required)
+#addVariable(variables, "ass_eta", "-x1 0 -x2 0.5", group_type = dsapatlink_required)
+#addVariable(variables, "ass_phi", "-x1 0 -x2 0.5", group_type = dsapatlink_required)
 addVariable(variables, "PATmass", group_type = dsapatlink_required)
 addVariable(variables, "PATmass_v1", "-x1 50 -x2 110", group_type = dsapatlink_required)
 addVariable(variables, "PATmass_v2", "-x1 0 -x2 300", group_type = dsapatlink_required)
-addVariable(variables, "corr_muon_iso", group_type = dsapatlink_required)
-addVariable(variables, "corr_muon_iso_v1", "-x1 -0.2 -x2 0.2", group_type = dsapatlink_required)
-addVariable(variables, "mincorr_muon_iso", group_type = dsapatlink_required)
-addVariable(variables, "maxcorr_muon_iso", group_type = dsapatlink_required)
+#addVariable(variables, "corr_muon_iso", group_type = dsapatlink_required)
+#addVariable(variables, "corr_muon_iso_v1", "-x1 -0.2 -x2 0.2", group_type = dsapatlink_required)
+#addVariable(variables, "mincorr_muon_iso", group_type = dsapatlink_required)
+#addVariable(variables, "maxcorr_muon_iso", group_type = dsapatlink_required)
 
 #2d variables (comma separated)
-addVariable(variables, "dim_isoPmumu,dim_isoLxy"    )
-addVariable(variables, "muon_iso,muon_iso"          )
-addVariable(variables, "corr_muon_iso,corr_muon_iso")
-addVariable(variables, "maxcorr_muon_iso,PATmass"   )
+#addVariable(variables, "dim_isoPmumu,dim_isoLxy"    )
+addVariable(variables, "muoniso,muoniso"          )
+#addVariable(variables, "corr_muon_iso,corr_muon_iso")
+#addVariable(variables, "maxcorr_muon_iso,PATmass"   )
 addVariable(variables, "dimdeltaeta,dimnseg"   )
-addVariable(variables, "dimdeltaeta,dthitscschits0"   )
-addVariable(variables, "dimdeltaeta,mindthitscschits0"   )
+addVariable(variables, "dimdeltaeta,dthitscschits"   )
+addVariable(variables, "dimdeltaeta,mindthitscschits"   )
+addVariable(variables, "lxypv, mass")
 
 plotsFolder = options.plotsFolder
 if plotsFolder[-1] != "/": plotsFolder = plotsFolder + "/"
@@ -316,7 +322,7 @@ print("python lxplusCondorSubmit.py --clip --inputFile run_plotter_2022.sh")
 print(" =============\n")
 if options.submit == True and options.debug == False:
     #if submit option
-    os.system("python3 lxplusCondorSubmit.py --clip --inputFile run_plotter_2022.sh")
+    os.system("python lxplusCondorSubmit.py --clip --inputFile run_plotter_2022.sh")
 
 ##TODO: Implement overlaid
 #python plotoverlaidcuts.py -x mass --year 2022 --dir /users/alberto.escalante/plots/Run3/debug -c REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF --dcuts OS SS --nomcbg --nosig -t dsa -x1 0 -x2 10
