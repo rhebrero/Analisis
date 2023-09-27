@@ -4,7 +4,7 @@ import DisplacedDimuons.Common.Constants as Constants
 from argparse import ArgumentParser
 parser = ArgumentParser()
 parser.add_argument("-s", "--selection", dest="selection", default = "", help="creats script file for given selection and set of variables", required=False)
-parser.add_argument("-v", "--variable", dest="variable", default = "", help="creats script file for given variables", required=False)
+parser.add_argument("-v", "--variable", dest="variable", default = "", help="creats script file for given variables (e.g -v mass or -v mass,mind0)", required=False)
 parser.add_argument("-i", "--info", dest="info", action="store_true", help="show all registered selections", required=False)
 parser.add_argument("-d", "--debug", dest="debug", action="store_true", default = False, help="debug, it does not create any folder", required=False)
 parser.add_argument("-y", "--year", dest="year", default="2022", help="2016, 2018, 2022(default), all", required=False)
@@ -17,8 +17,13 @@ def getNtuples(cut, rntuples_dir):
     retrieves the right set of ntuples given the selection"
     '''
     my_rntuples_dir = rntuples_dir
-    variables_patlink = ["DSA11", "DSA3"]
+    variables_patlink = ["DSA11", "DSA3"] 
 
+    ## dim_type == 11: DSA dimuons with one muon replaced and with the
+    #                  corresponding HYB dimuon stored
+    ## # dim_type == 3:  DSA dimuons with both muons replaced and with the
+    #                   corresponding PAT dimuon stored
+    
     #getting appropiate rNtuple
     for kvariables_patlink in variables_patlink:
         if kvariables_patlink in cut:
@@ -201,10 +206,17 @@ selections['base_overlay_qcd_IDETANDTIDETASEG_noSEG_OS_DSAISO0P1_IDSAISO0P1'] = 
 selections['base_overlay_qcd_IMASS_OS_DSAISO0P1_IDSAISO0P1']            = 'REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF DPHI OS, DSAISO0P1 IDSAISO0P1'
 
 #partial unblind of 2022 data
-selections['base_signalregion_rpv']       = 'BASE LXYE20 OS DPHI MASS15 DSAISO0p15 UNBLIND30'
-selections['base_signalregion_zd']      = 'BASE LXYE20 OS DPHIb10 DSAISO0p15 UNBLIND30'
-selections['base_signalregion_run2']      = 'BASE OS UNBLIND30'
+#selections['base_signalregion_rpv']       = 'BASE LXYE20 OS DPHI MASS15 DSAISO0p15 UNBLIND30'
+#selections['base_signalregion_zd']      = 'BASE LXYE20 OS DPHIb10 DSAISO0p15 UNBLIND30'
+#selections['base_signalregion_run2']      = 'BASE OS UNBLIND30'
+selections['base_signalregion_rpv']       = 'BASE LXYE20 OS DPHI MASS15 DSAISO0p15 UNBLIND100'
+selections['base_signalregion_zd']        = 'BASE LXYE20 OS DPHIb10 DSAISO0p15 UNBLIND100'
+selections['base_signalregion_run2']      = 'BASE OS UNBLIND100'
+selections['base_signalregion_run2_SS']   = 'BASE SS UNBLIND100'
 
+# TMS-TMS selection
+selections['base_selection_dy_pat']      = 'BASE OS IDPHI'
+selections['base_selection_qcd_pat']     = 'BASE SS DPHI'
 
 if options.info == True:
     showSelections(selections)
@@ -223,23 +235,31 @@ addVariable(variables, "lxysigpv")
 addVariable(variables, "lxysigpv_v1", "-x1 0 -x2 200")
 addVariable(variables, "lxysigpv_v2", "-x1 0 -x2 6 -nx 6")
 addVariable(variables, "lxysigpv_v3", "-x1 0 -x2 60 -nx 20")
+addVariable(variables, "lxyerrpv", "-x1 0 -x2 25 -nx 25")
 addVariable(variables, "mass")
-addVariable(variables, "mass_v1", "-x1 0 -x2 300")
-addVariable(variables, "mass_v2", "-x1 0 -x2 10 -nx 10")
-addVariable(variables, "mass_v3", "-x1 6 -x2 10 -nx 4")
-addVariable(variables, "mass_v4", "-xe 0 10 30 60 80")
-addVariable(variables, "mass_v5", "-xe 6 10 30 60 80")
-addVariable(variables, "mass_v6", "-xe 0 2 4 6 10 30 40 50")
-addVariable(variables, "mass_v7", "-x1 0 -x2 60 -nx 6")
-addVariable(variables, "mass_v8", "-x1 5 -x2 10 -nx 5")
-addVariable(variables, "mass_v9", "-x1 0 -x2 60 -nx 12")
-addVariable(variables, "mass_v10", "-xe 0 5 10 20 30 40 50 60 ")
+#addVariable(variables, "mass_v1", "-x1 0 -x2 300")
+#addVariable(variables, "mass_v2", "-x1 0 -x2 10 -nx 10")
+#addVariable(variables, "mass_v3", "-x1 6 -x2 10 -nx 4")
+#addVariable(variables, "mass_v4", "-xe 0 10 30 60 80")
+#addVariable(variables, "mass_v5", "-xe 6 10 30 60 80")
+#addVariable(variables, "mass_v6", "-xe 0 2 4 6 10 30 40 50")
+#addVariable(variables, "mass_v7", "-x1 0 -x2 60 -nx 6")
+#addVariable(variables, "mass_v8", "-x1 5 -x2 10 -nx 5")
+#addVariable(variables, "mass_v9", "-x1 0 -x2 60 -nx 12")
+#addVariable(variables, "mass_v10", "-xe 0 5 10 20 30 40 50 60 ")
 addVariable(variables, "qsum")
 addVariable(variables, "dca")
 addVariable(variables, "dca_v1", "-x1 0 -x2 100")
 addVariable(variables, "deltaphi")
 addVariable(variables, "dimdeltaeta")
 addVariable(variables, "minpt")
+addVariable(variables, "maxpt")
+addVariable(variables, "maxpt", "-x1 0 -x2 1000 -nx 1000")
+addVariable(variables, "minfpte")
+addVariable(variables, "maxfpte")
+addVariable(variables, "mind0bs", "-x1 0 -x2 100 -nx 100")
+addVariable(variables, "maxd0bs", "-x1 0 -x2 400 -nx 400")
+addVariable(variables, "mind0sigpv", "-x1 0 -x2 100 -nx 100")
 addVariable(variables, "minpt_v1", "-x1 0 -x2 300")
 addVariable(variables, "minpt_v2", "-x1 0 -x2 60 -nx 12")
 addVariable(variables, "eta")
@@ -302,15 +322,27 @@ for selection in selections.keys():
         continue
     nselections = nselections + 1
     for variable in variables.keys():
-        if len(options.variable) > 0 and options.variable not in variable:
-            continue
+        if len(options.variable) > 0:
+            #user has specified a subset of variables (optionaly, comma separated variables)
+            userVariable = False
+            selected_variables = options.variable.split(",") 
+            for selected_variable in selected_variables:
+                if variable == selected_variable:
+                    #variable is interesting
+                    userVariable = True
+            if userVariable == False:
+                continue
+
         if skipVariable(selections[selection], variable, dsapatlink_required) == True:
             #removes pairs selection - variable that do not make sense
             continue        
         if nselections == 1:
             nvariables = nvariables + 1
         for year in years:
-            command = makePlot(plotsFolder = plotsFolder + selection, year = year, cut = selections[selection], variable = clearVersion(variable), dim_type = "dsa", options_str = variables[variable], run = False)
+            dim_type = "dsa"
+            if "_pat" in selection:
+                dim_type = "pat"
+            command = makePlot(plotsFolder = plotsFolder + selection, year = year, cut = selections[selection], variable = clearVersion(variable), dim_type = dim_type, options_str = variables[variable], run = False)
             njobs = njobs +1
             jobs.write(command +"\n")
         
