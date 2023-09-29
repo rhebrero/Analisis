@@ -45,7 +45,7 @@ def getNtuples(cut, rntuples_dir):
 
     return my_rntuples_dir
     
-def makePlot(plotsFolder, script = "", year = "2022", cut = "", variable = "", dim_type = "dsa", flags = "--nomcbg --nosig --noratio", options_str = "", run = False):
+def makePlot(plotsFolder, script = "", year = "2022", cut = "", variable = "", flags = "--nomcbg --nosig --noratio", options_str = "", run = False):
     '''
     creates a python scripts to produce plots (to be submitted in batch system)
     '''
@@ -65,7 +65,7 @@ def makePlot(plotsFolder, script = "", year = "2022", cut = "", variable = "", d
     if len(nvariables) == 1 and len(ncuts) == 1:
         script = "plotstack.py"
         varx = variable
-        command = "python {SCRIPT} -d {OUTPUTFOLDER} --samplepath {SAMPLEPATH} --year {YEAR} -c {CUTS} -x {VARX} -t {DIM_TYPE} {FLAGS}".format(SCRIPT = script, OUTPUTFOLDER = plotsFolder, SAMPLEPATH = samplepath, YEAR = year, CUTS = cut, VARX = varx, DIM_TYPE = dim_type, FLAGS = flags)
+        command = "python {SCRIPT} -d {OUTPUTFOLDER} --samplepath {SAMPLEPATH} --year {YEAR} -c {CUTS} -x {VARX} {FLAGS}".format(SCRIPT = script, OUTPUTFOLDER = plotsFolder, SAMPLEPATH = samplepath, YEAR = year, CUTS = cut, VARX = varx, FLAGS = flags)
 
     elif len(nvariables) == 1 and len(ncuts)==2:
         #python plotoverlaidcuts.py -x mass --year 2022 --dir /users/alberto.escalante/plots/Run3/debug -c REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF --dcuts OS SS --nomcbg --nosig -t dsa -x1 0 -x2 10
@@ -73,14 +73,14 @@ def makePlot(plotsFolder, script = "", year = "2022", cut = "", variable = "", d
         varx = variable
         cutbase  = ncuts[0]
         cutextra = ncuts[1]
-        command = "python {SCRIPT} -d {OUTPUTFOLDER} --samplepath {SAMPLEPATH} --year {YEAR} -c {CUTS} -x {VARX} -t {DIM_TYPE} --dcuts {CUTEXTRA} {FLAGS}".format(SCRIPT = script, OUTPUTFOLDER = plotsFolder, SAMPLEPATH = samplepath, YEAR = year, CUTS = cutbase, VARX = varx, CUTEXTRA = cutextra, DIM_TYPE = dim_type, FLAGS = flags + "--legpos bl")
+        command = "python {SCRIPT} -d {OUTPUTFOLDER} --samplepath {SAMPLEPATH} --year {YEAR} -c {CUTS} -x {VARX} --dcuts {CUTEXTRA} {FLAGS}".format(SCRIPT = script, OUTPUTFOLDER = plotsFolder, SAMPLEPATH = samplepath, YEAR = year, CUTS = cutbase, VARX = varx, CUTEXTRA = cutextra, FLAGS = flags + "--legpos bl")
         #at the moment --noratio option is supported
         command = command.replace("--noratio", "")
     elif len(nvariables) == 2 and len(ncuts) == 1:
         script = "plot2d.py"
         varx = nvariables[0]
         vary = nvariables[1]
-        command = "python {SCRIPT} -d {OUTPUTFOLDER} --samplepath {SAMPLEPATH} --year {YEAR} -c {CUTS} -x {VARX} -y {VARY} -t {DIM_TYPE} {FLAGS}".format(SCRIPT = script, OUTPUTFOLDER = plotsFolder, SAMPLEPATH = samplepath, YEAR = year, CUTS = cut, VARX = varx, VARY = vary, DIM_TYPE = dim_type, FLAGS = flags.replace("--noratio", ""))
+        command = "python {SCRIPT} -d {OUTPUTFOLDER} --samplepath {SAMPLEPATH} --year {YEAR} -c {CUTS} -x {VARX} -y {VARY} {FLAGS}".format(SCRIPT = script, OUTPUTFOLDER = plotsFolder, SAMPLEPATH = samplepath, YEAR = year, CUTS = cut, VARX = varx, VARY = vary, FLAGS = flags.replace("--noratio", ""))
     else:
         print("ERROR: number of variables or script cannot be identified")
         print("  nvariables: ", nvariables)
@@ -154,69 +154,94 @@ print("Registering selections... \n")
 # add sections
 selections = {}
 
-#measurement regions
+#BASE selections:
+#  STA-STA: 'REP', 'LXYE', 'MASS', 'CHI2', 'COSA', 'LXYS', 'DCA', 'DETANDT', 'DETASEG', 'SEG', 'DSATIME', 'DIR', 'BBDSATIMEDIFF'
+#  TMS-TMS: 'REP', 'LXYE', 'MASS', 'CHI2', 'COSA', 'LXYS', 'DCA', 'D0SIGPV', 'ISO', 'PXL', 'MAXPT25', 'HB4V', 'NTRKLAYSLXY'
+
+# 1. STA-STA selection 
+
+# 1.1 general control and measurement regions
+selections['base_selection_dy']      = 'BASE OS IDPHI'
+selections['base_selection_qcd']     = 'BASE SS DPHI'
+selections['base_selection_qcd_all'] = 'BASE SS'
 selections['base_selection_dy_cr_patpat']  = 'DSA3  LXYE MASS CHI2 COSA DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF OS DYTFPATCUTS LXYS '
 selections['base_selection_dy_cr_patpat_match']  = 'DSA3  LXYE MASS CHI2 COSA DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF OS DYTFPATCUTS LXYS PATMATCH'
 selections['base_selection_dy_cr_hyb']     = 'DSA11 LXYE MASS CHI2 COSA DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF OS DYTFHYBCUTS LXYS '
 selections['base_selection_qcd_cr_patpat'] = 'DSA3  LXYE MASS CHI2 COSA DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF OS NONISOPATDIM0p1 LXYS '
 selections['base_selection_qcd_cr_hyb']    = 'DSA11 LXYE MASS CHI2 COSA DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF OS NONISOHYBDIM0p1 LXYS '
 
-#BASE: 'REP', 'LXYE', 'MASS', 'CHI2', 'COSA', 'LXYS', 'DCA', 'DETANDT', 'DETASEG', 'SEG', 'DSATIME', 'DIR', 'BBDSATIMEDIFF'
-
-#control regions
-selections['base_selection_dy']      = 'BASE OS IDPHI'
-selections['base_selection_qcd']     = 'BASE SS DPHI'
-selections['base_selection_qcd_all'] = 'BASE SS DPHI'
-
-#validation regions
+# 1.2 validation regions
 selections['base_selection_qcd_IDETANDTIDETASEG'] = 'REP LXYE MASS CHI2 COSA LXYS DCA IDETANDTIDETASEG SEG DSATIME DIR BBDSATIMEDIFF'
 selections['base_selection_qcd_IDETANDTIDETASEG_noSEG'] = 'REP LXYE MASS CHI2 COSA LXYS DCA IDETANDTIDETASEG DSATIME DIR BBDSATIMEDIFF'
 selections['base_selection_qcd_IMASS']            = 'REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF'
 selections['base_selection_dy_ILXYS']             = 'REP LXYE MASS CHI2 COSA ILXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF'
 
-#cosmic ray selection
+# 1.3 cosmic ray selection
 selections['base_selection_cosmic'] = 'REP LXYE MASS CHI2 ICOSA LXYS DCA DETANDT DETASEG SEG IDSATIME IDPHI'
 
-#validation regions 2018 (overlays)
+# 1.4 Overlays
+# 1.4.1 validation regions, 2018 selection
 selections['base_overlay_qcd_IDETANDTIDETASEG_OS_SS'] = 'REP LXYE MASS CHI2 COSA LXYS DCA IDETANDTIDETASEG SEG DSATIME DIR BBDSATIMEDIFF, OS SS'
 selections['base_overlay_qcd_IMASS_OS_SS']            = 'REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF, OS SS'
 
-#DY measurement region (overlay) - 2022
+# 1.4.2 validation region, ILXY
 selections['base_overlay_dy_ILXYS_DPHI_IDPHI3']   = 'REP LXYE MASS CHI2 COSA ILXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF DSAISO0P1, DPHI IDPHI3'
 selections['base_overlay_dy_ILXYS_DPHI1_IDPHI2']  = 'REP LXYE MASS CHI2 COSA ILXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF DSAISO0P1, DPHI1 IDPHI2'
 
+# 1.4.3 measurement regions in TF_DY
 selections['base_overlay_dy_PATPAT_DPHI_IDPHI3']  = 'DSA3  LXYE MASS CHI2 COSA DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF OS DYTFPATCUTS DSAISO0P1, DPHI IDPHI3'
 selections['base_overlay_dy_PATPAT_DPH1_IDPHI2']  = 'DSA3  LXYE MASS CHI2 COSA DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF OS DYTFPATCUTS DSAISO0P1, DPHI1 IDPHI2'
-
 selections['base_overlay_dy_HYB_DPHI_IDPHI3']     = 'DSA11 LXYE MASS CHI2 COSA DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF OS DYTFHYBCUTS DSAISO0P1, DPHI IDPHI3'
 selections['base_overlay_dy_HYB_DPHI1_IDPHI2']    = 'DSA11 LXYE MASS CHI2 COSA DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF OS DYTFHYBCUTS DSAISO0P1, DPHI1 IDPHI2'
 
-#validation regions isolation - 2022
+# 1.4.4 validation regions, inverted quality (both OS and SS)
 selections['base_overlay_qcd_IDETANDTIDETASEG_DSAISO0P1_IDSAISO0P1']       = 'REP LXYE MASS  CHI2 COSA LXYS DCA IDETANDTIDETASEG SEG DSATIME DIR BBDSATIMEDIFF, DSAISO0P1 IDSAISO0P1'
 selections['base_overlay_qcd_IDETANDTIDETASEG_noSEG_DSAISO0P1_IDSAISO0P1'] = 'REP LXYE MASS  CHI2 COSA LXYS DCA IDETANDTIDETASEG DSATIME DIR BBDSATIMEDIFF, DSAISO0P1 IDSAISO0P1'
-selections['base_overlay_qcd_IMASS_DSAISO0P1_IDSAISO0P1']            = 'REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG  SEG DSATIME DIR BBDSATIMEDIFF, DSAISO0P1 IDSAISO0P1'
-
 selections['base_overlay_qcd_IDETANDTIDETASEG_SS_DSAISO0P1_IDSAISO0P1']       = 'REP LXYE CHI2 COSA LXYS DCA IDETANDTIDETASEG SEG DSATIME DIR BBDSATIMEDIFF DPHI SS, DSAISO0P1 IDSAISO0P1'
 selections['base_overlay_qcd_IDETANDTIDETASEG_noSEG_SS_DSAISO0P1_IDSAISO0P1'] = 'REP LXYE CHI2 COSA LXYS DCA IDETANDTIDETASEG DSATIME DIR BBDSATIMEDIFF DPHI SS, DSAISO0P1 IDSAISO0P1'
-selections['base_overlay_qcd_IMASS_SS_DSAISO0P1_IDSAISO0P1']            = 'REP LXYE CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF DPHI SS, DSAISO0P1 IDSAISO0P1'
-selections['base_overlay_qcd_BASE_SS_DSAISO0P1_IDSAISO0P1']             = 'REP LXYE MASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF DPHI SS, DSAISO0P1 IDSAISO0P1'
-
 selections['base_overlay_qcd_IDETANDTIDETASEG_OS_DSAISO0P1_IDSAISO0P1']       = 'REP LXYE CHI2 COSA LXYS DCA IDETANDTIDETASEG SEG DSATIME DIR BBDSATIMEDIFF DPHI OS, DSAISO0P1 IDSAISO0P1'
 selections['base_overlay_qcd_IDETANDTIDETASEG_noSEG_OS_DSAISO0P1_IDSAISO0P1'] = 'REP LXYE CHI2 COSA LXYS DCA IDETANDTIDETASEG DSATIME DIR BBDSATIMEDIFF DPHI OS, DSAISO0P1 IDSAISO0P1'
+
+# 1.4.5 validation regions, inverted mass (both OS and SS)
+selections['base_overlay_qcd_IMASS_DSAISO0P1_IDSAISO0P1']            = 'REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG  SEG DSATIME DIR BBDSATIMEDIFF, DSAISO0P1 IDSAISO0P1'
+selections['base_overlay_qcd_IMASS_SS_DSAISO0P1_IDSAISO0P1']            = 'REP LXYE CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF DPHI SS, DSAISO0P1 IDSAISO0P1'
 selections['base_overlay_qcd_IMASS_OS_DSAISO0P1_IDSAISO0P1']            = 'REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF DPHI OS, DSAISO0P1 IDSAISO0P1'
 
-#partial unblind of 2022 data
-#selections['base_signalregion_rpv']       = 'BASE LXYE20 OS DPHI MASS15 DSAISO0p15 UNBLIND30'
-#selections['base_signalregion_zd']      = 'BASE LXYE20 OS DPHIb10 DSAISO0p15 UNBLIND30'
-#selections['base_signalregion_run2']      = 'BASE OS UNBLIND30'
-selections['base_signalregion_rpv']       = 'BASE LXYE20 OS DPHI MASS15 DSAISO0p15 UNBLIND100'
-selections['base_signalregion_zd']        = 'BASE LXYE20 OS DPHIb10 DSAISO0p15 UNBLIND100'
-selections['base_signalregion_run2']      = 'BASE OS UNBLIND100'
-selections['base_signalregion_run2_SS']   = 'BASE SS UNBLIND100'
+# 1.4.6 control regions, SS
+selections['base_overlay_qcd_BASE_SS_DSAISO0P1_IDSAISO0P1']             = 'REP LXYE MASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF DPHI SS, DSAISO0P1 IDSAISO0P1'
 
-# TMS-TMS selection
-selections['base_selection_dy_pat']      = 'BASE OS IDPHI'
-selections['base_selection_qcd_pat']     = 'BASE SS DPHI'
+# 1.5 STA-STA signal regions (2022)
+selections['base_signalregion_rpv']       = 'BASE LXYE20 OS DPHI MASS15 DSAISO0p15 --sudo'
+selections['base_signalregion_zd']        = 'BASE LXYE20 OS DPHIb10 DSAISO0p15 --sudo'
+
+# 1.5 STA-STA signal regions (2022) but wiht Run 2 selection
+selections['base_signalregion_run2']      = 'BASE OS --sudo'
+selections['base_signalregion_run2_SS']   = 'BASE SS --sudo'
+
+# 2. TMS-TMS selection 
+# 2.1 Control regions
+selections['base_patpat_selection_dy']      = 'BASE OS IDPHI -t pat'
+selections['base_patpat_selection_qcd']     = 'BASE SS DPHI -t pat'
+selections['base_patpat_selection_dy_d0_20']      = 'BASE OS IDPHI D0SIGPV20 -t pat'
+selections['base_patpat_selection_qcd_d0_20']     = 'BASE SS DPHI D0SIGPV20 -t pat'
+
+# 2.2 Signal regions (2022 data)
+selections['base_patpat_signalregion_rpv']     = 'BASE OS TMSDPHI --sudo -t pat'
+selections['base_patpat_signalregion_zd']      = 'BASE OS DPHIb30 --sudo -t pat'
+selections['base_patpat_signalregion_rpv_d0_20']     = 'BASE OS TMSDPHI D0SIGPV20 --sudo -t pat'
+selections['base_patpat_signalregion_zd_d0_20']      = 'BASE OS DPHIb30 D0SIGPV20 --sudo -t pat'
+
+# 2.3 Inverted mass
+BASE_IMASS = "REP LXYE IMASS CHI2 COSA LXYS DCA D0SIGPV ISO PXL MAXPT25 HB4V NTRKLAYSLXY"
+selections['base_patpat_imass_dy']        = '{BASE_IMASS} OS IDPHI --sudo -t pat'.format(BASE_IMASS = BASE_IMASS)
+selections['base_patpat_imass_qcd']       = '{BASE_IMASS} SS  DPHI --sudo -t pat'.format(BASE_IMASS = BASE_IMASS)
+selections['base_patpat_imass_dy_d0_20']  = '{BASE_IMASS} OS IDPHI D0SIGPV20 --sudo -t pat'.format(BASE_IMASS = BASE_IMASS)
+selections['base_patpat_imass_qcd_d0_20'] = '{BASE_IMASS} OS  DPHI D0SIGPV20 --sudo -t pat'.format(BASE_IMASS = BASE_IMASS)
+
+# 2.3.1 No mass cut and events failing isolation 
+BASE_ISOGT0P075 = "REP LXYE CHI2 COSA LXYS DCA D0SIGPV ISOGT0P075 PXL MAXPT25 HB4V NTRKLAYSLXY"
+selections['base_patpat_isogt0p075'] = '{BASE_ISOGT0P075} OS DPHIb30 --sudo -t pat'.format(BASE_ISOGT0P075 = BASE_ISOGT0P075)
+selections['base_patpat_isogt0p075_d0_20'] = '{BASE_ISOGT0P075} OS DPHIb30 D0SIGPV20 --sudo -t pat'.format(BASE_ISOGT0P075 = BASE_ISOGT0P075)
 
 if options.info == True:
     showSelections(selections)
@@ -224,20 +249,21 @@ if options.info == True:
 
 print("Registering variables... \n")
 
-#add variables
+# add variables
 variables = {}
 
 addVariable(variables, "lxypv")
 addVariable(variables, "lxypv_v1", "-x1 0 -x2 60")
 addVariable(variables, "lxypv_v2", "-x1 0 -x2 300")
 addVariable(variables, "lxypv_v3", "-x1 0 -x2 600")
+addVariable(variables, "lxypv_v4", "-x1 0 -x2 30")
 addVariable(variables, "lxysigpv")
 addVariable(variables, "lxysigpv_v1", "-x1 0 -x2 200")
 addVariable(variables, "lxysigpv_v2", "-x1 0 -x2 6 -nx 6")
 addVariable(variables, "lxysigpv_v3", "-x1 0 -x2 60 -nx 20")
 addVariable(variables, "lxyerrpv", "-x1 0 -x2 25 -nx 25")
 addVariable(variables, "mass")
-#addVariable(variables, "mass_v1", "-x1 0 -x2 300")
+addVariable(variables, "mass_v1", "-x1 0 -x2 20 -nx 200")
 #addVariable(variables, "mass_v2", "-x1 0 -x2 10 -nx 10")
 #addVariable(variables, "mass_v3", "-x1 6 -x2 10 -nx 4")
 #addVariable(variables, "mass_v4", "-xe 0 10 30 60 80")
@@ -276,8 +302,7 @@ addVariable(variables, "timediff")
 addVariable(variables, "maxabstime")
 addVariable(variables, "minbbdsatimediff")
 
-## special variables
-#Need DSAPAT-LINK
+## special variables that need DSAPAT-LINK
 dsapatlink_required = ["REP BASE"] #do not plot if those cuts are included
 #addVariable(variables, "ass_eta", "-x1 0 -x2 0.5", group_type = dsapatlink_required)
 #addVariable(variables, "ass_phi", "-x1 0 -x2 0.5", group_type = dsapatlink_required)
@@ -339,10 +364,7 @@ for selection in selections.keys():
         if nselections == 1:
             nvariables = nvariables + 1
         for year in years:
-            dim_type = "dsa"
-            if "_pat" in selection:
-                dim_type = "pat"
-            command = makePlot(plotsFolder = plotsFolder + selection, year = year, cut = selections[selection], variable = clearVersion(variable), dim_type = dim_type, options_str = variables[variable], run = False)
+            command = makePlot(plotsFolder = plotsFolder + selection, year = year, cut = selections[selection], variable = clearVersion(variable), options_str = variables[variable], run = False)
             njobs = njobs +1
             jobs.write(command +"\n")
         
@@ -355,6 +377,3 @@ print(" =============\n")
 if options.submit == True and options.debug == False:
     #if submit option
     os.system("python lxplusCondorSubmit.py --clip --inputFile run_plotter_2022.sh")
-
-##TODO: Implement overlaid
-#python plotoverlaidcuts.py -x mass --year 2022 --dir /users/alberto.escalante/plots/Run3/debug -c REP LXYE IMASS CHI2 COSA LXYS DCA DETANDT DETASEG SEG DSATIME DIR BBDSATIMEDIFF --dcuts OS SS --nomcbg --nosig -t dsa -x1 0 -x2 10
