@@ -4,6 +4,8 @@ from argparse import ArgumentParser
 
 parser = ArgumentParser()
 parser.add_argument("-m", "--model", dest="model", help="specify model, supported values: Benchmark, HAHM, RPV", required=True)
+parser.add_argument("-n", "--nevents", dest="nevents", help="number of events, default is 100", required=False, default = 100)
+
 options = parser.parse_args()
 
 SUSY = "Configuration/GenProduction/python/ThirteenPointSixTeV/Fragments2022_RPV/"
@@ -54,8 +56,6 @@ if options.model == "RPV":
 if options.model == "BENCHMARK":
     samples.append(BENCHMARK + "HTo2LongLivedTo2mu2jets_MH-125_MFF-20_CTau-130mm_TuneCP5_13p6TeV_pythia8_cff.py" )
     samples.append(BENCHMARK + "HTo2LongLivedTo2mu2jets_MH-125_MFF-50_CTau-500mm_TuneCP5_13p6TeV_pythia8_cff.py" )
-    samples.append(BENCHMARK + "HTo2LongLivedToWmu2jets_MH-125_MFF-20_CTau-130mm_TuneCP5_13p6TeV_pythia8_cff.py" )
-    samples.append(BENCHMARK + "HTo2LongLivedToWmu2jets_MH-125_MFF-50_CTau-500mm_TuneCP5_13p6TeV_pythia8_cff.py" )
 
 #HAHM (needs gridpacks)
 if options.model == "HAHM":
@@ -72,12 +72,11 @@ for kSample in samples:
     kSample_short = kSample.split("/")[-1]
     gen_fragment = kSample_short.replace("_cff.py", "_1_cfg_GS.py")
     out_file = outfolder + kSample_short.replace("_cff.py", "_GS.root")
-    nevents = "100"
 
     if options.model == "HAHM":
         #HAHM needs LHE file and uses gridpack
-        command = "cmsDriver.py {PYTHIA_FRAGMENT} --python_filename {GEN_FRAGMENT} --eventcontent RAWSIM,LHE --customise Configuration/DataProcessing/Utils.addMonitoring --datatier GEN-SIM,LHE --fileout file:{OUT_FILE} --conditions 124X_mcRun3_2022_realistic_v10 --beamspot Realistic25ns13p6TeVEarly2022Collision --step LHE,GEN,SIM --geometry DB:Extended --era Run3 --mc -n {NEVENTS} --no_exec".format(PYTHIA_FRAGMENT=pythia_fragment, GEN_FRAGMENT=gen_fragment, OUT_FILE=out_file, NEVENTS=nevents)
+        command = "cmsDriver.py {PYTHIA_FRAGMENT} --python_filename {GEN_FRAGMENT} --eventcontent RAWSIM,LHE --customise Configuration/DataProcessing/Utils.addMonitoring --datatier GEN-SIM,LHE --fileout file:{OUT_FILE} --conditions 124X_mcRun3_2022_realistic_v10 --beamspot Realistic25ns13p6TeVEarly2022Collision --step LHE,GEN,SIM --geometry DB:Extended --era Run3 --mc -n {NEVENTS} --no_exec".format(PYTHIA_FRAGMENT=pythia_fragment, GEN_FRAGMENT=gen_fragment, OUT_FILE=out_file, NEVENTS=options.nevents)
     else:
-        command = "cmsDriver.py {PYTHIA_FRAGMENT} --python_filename {GEN_FRAGMENT} --eventcontent RAWSIM --customise Configuration/DataProcessing/Utils.addMonitoring --datatier GEN-SIM --fileout file:{OUT_FILE} --conditions 124X_mcRun3_2022_realistic_v10 --beamspot Realistic25ns13p6TeVEarly2022Collision --step GEN,SIM --geometry DB:Extended --era Run3 --mc -n {NEVENTS} --no_exec".format(PYTHIA_FRAGMENT=pythia_fragment, GEN_FRAGMENT=gen_fragment, OUT_FILE=out_file, NEVENTS=nevents)
+        command = "cmsDriver.py {PYTHIA_FRAGMENT} --python_filename {GEN_FRAGMENT} --eventcontent RAWSIM --customise Configuration/DataProcessing/Utils.addMonitoring --datatier GEN-SIM --fileout file:{OUT_FILE} --conditions 124X_mcRun3_2022_realistic_v10 --beamspot Realistic25ns13p6TeVEarly2022Collision --step GEN,SIM --geometry DB:Extended --era Run3 --mc -n {NEVENTS} --no_exec".format(PYTHIA_FRAGMENT=pythia_fragment, GEN_FRAGMENT=gen_fragment, OUT_FILE=out_file, NEVENTS=options.nevents)
 
     os.system(command)

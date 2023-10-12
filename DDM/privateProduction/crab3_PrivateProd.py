@@ -1,3 +1,4 @@
+import CRABClient
 from CRABClient.UserUtilities import config 
 config = config()
 
