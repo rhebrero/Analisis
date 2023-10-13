@@ -17,5 +17,6 @@ This is usally done in three steps, for this you need a valid grid certificate
 ```
 
 submit: 
-`python crab3_PrivateProd.py -f submission -v GS-October2023_ToDelete -s 100 -n 1000 -d`
+
+`python crabGenerationGenProd.py -f submission -v GS-October2023_ToDelete -s 100 -n 1000 -d`
 
