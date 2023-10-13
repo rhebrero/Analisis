@@ -15,6 +15,8 @@ directories = ['NTuples', 'rNTuples']
 # template commands
 command_template = "rsync {OPTIONS} escalant@lxplus.cern.ch:{SOURCE_PATH}/{SAMPLE} {TARGET_PATH}/{SAMPLE}"
 
+rsync_options = ""
+# -r 
 # getting rNtuples and hadding them
 for directory in directories:
     if samples[key]["nfiles"] > 1:
