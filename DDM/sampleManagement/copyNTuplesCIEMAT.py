@@ -2,6 +2,11 @@
 
 # import needed packages
 from os import system as bash
+from argparse import ArgumentParser
+parser = ArgumentParser()
+
+parser.add_argument("-d", "--debug", dest="debug", default = False, help="does a dry-run (with verbose logs)", required=False)
+options = parser.parse_args()
 
 # input path in eos
 source_path = '/eos/cms/store/group/phys_exotica/displacedMuons/'
@@ -13,25 +18,26 @@ target_path = '/pnfs/ciemat.es/data/cms/store/user/escalant/displacedMuons/'
 directories = ['NTuples', 'rNTuples']
 
 # template commands
-command_template = "rsync {OPTIONS} escalant@lxplus.cern.ch:{SOURCE_PATH}/{SAMPLE} {TARGET_PATH}/{SAMPLE}"
+command_template = "rsync {OPTIONS} escalant@lxplus.cern.ch:{SOURCE_PATH}{DIRECTORY} {TARGET_PATH}"
 
-rsync_options = ""
-# -r 
-# getting rNtuples and hadding them
+# common rsync options
+# -r recursive 
+# -a 'archive', it preserves symlinks, permisions etc...
+# -z compresses the file while transfering
+# -P allows you to resume the transfer and it shows a status bar
+# -nv means verbose and debug, useful to check that rsync is doing the right stuff
+# --delete removes directories from the destination folder if they do not match the original folder
+
+if options.debug == True:
+    rsync_options = "-azPnv"
+else:
+    rsync_options = "-azP"
+
+# getting the directories and rsyncing them
 for directory in directories:
-    if samples[key]["nfiles"] > 1:
-        for index in range(1, samples[key]["nfiles"]+1 ):
-            if "{INDEX}" in key: sample = key.format(INDEX=index)
-            command = command_template.format(SAMPLE = sample, SOURCE_PATH = source_path, TARGET_PATH = target_path)
-            print(command)
-            if do_scp : bash(command)
-        if  index == samples[key]["nfiles"]:
-            #hadd samples
-            hadd = hadd_template.format(OUTPUTFILE = key.replace("_{INDEX}", ""), INPUTFILES = key.replace("_{INDEX}", "_*"),
-            TARGET_PATH = target_path)
-            print(hadd)
-            if do_hadd: bash(hadd)
-    else:
-        command = command_template.format(SOURCE_PATH = source_path, SAMPLE = key, TARGET_PATH = target_path)
-        print(command)
-        if do_scp: bash(command)
+    command = command_template.format(OPTIONS = rsync_options, 
+                                        SOURCE_PATH = source_path,
+                                        DIRECTORY = directory,   
+                                        TARGET_PATH = target_path)
+    print(command)
+    bash(command)
