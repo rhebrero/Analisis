@@ -6,8 +6,8 @@
 
     ```python
     # dry run
-    python copyNTuplesCIEMAT.py -debug` 
+    python copyNTuplesCIEMAT.py -debug
     # actual run
-    python copyNTuplesCIEMAT.py` 
+    python copyNTuplesCIEMAT.py 
     ```
 
