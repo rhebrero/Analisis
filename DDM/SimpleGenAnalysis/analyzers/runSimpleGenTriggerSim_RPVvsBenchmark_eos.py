@@ -1,7 +1,7 @@
 import os
 import argparse
-from SimpleTools import getSuffix
-from SamplesDatabase import samples_Benchmark, samples_HAHM, samples_RPV, samples_2022
+from utils.SimpleTools import getSuffix
+from utils.SamplesDatabase import samples_Benchmark, samples_HAHM, samples_RPV, samples_2022
 
 parser = argparse.ArgumentParser(description="creates submission scripts.")
 

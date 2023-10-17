@@ -17,9 +17,9 @@ from DataFormats.FWLite import Handle, Events
 from math import *
 
 #Utils for Longlived Generator Level studies.
-from GenLongLivedUtils import *
-from SimpleTools import *
-from myMathUtils import *
+from utils.GenLongLivedUtils import *
+from utils.SimpleTools import *
+from utils.myMathUtils import *
 
 #bash utils
 import os

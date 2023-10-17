@@ -1,15 +1,16 @@
 # SimpleGenAnalysis
 
-Simple standalone python code to make quick histograms from a GEN-SIM sample
+This folder contains basic, general scripts, used by the plotter and analyzer,
 
-## Getting Started
+1. `GenLongLivedUtils.py` includes tools to use gen level information
+2. `RecoUtils.py` general functions to be used when running on a AOD, reconstructe sample. 
+3. `ResolutionUtils.py` unused (?). *TBC*.
+4. `myMathUtils.py` basic math operations.
+5. `SimpleTools.py` plotter and ratio plotter.
+6. `SamplesDatabase.py` database of all signal samples.
 
-After doing cmsenv in a CMSSW release, simply run python SimpleGenSim.py
+These scripts are liked to `plotters` and `analyzer` via:
 
-### Configuration of SimpleTools.py
+`python linkUtils.py`
 
-Make sure that you set the proper path to the input files, as well as in a valid output folder where you have permission to write plots.
-
-## Extra Material
-
-For additional validation checks and functions check ValidateMiniAod.py
+To be used, these scripts need to be imported. 
