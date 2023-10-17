@@ -23,5 +23,7 @@ if config.Data.publication == True:
     config.Data.outputDatasetTag = 'dataset_tag_name' #please follow naming conventions when publishing (if existing).
 
 config.section_("Site")
-config.Site.storageSite = 'T2_AT_Vienna'
+#config.Site.storageSite = 'T2_AT_Vienna' 
+config.Site.storageSite = 'T2_ES_CIEMAT'
 #config.Site.whitelist = ['T2_AT_Vienna'] (only for debugging purposes)
+#config.Site.whitelist = ['T2_ES_CIEMAT'] (only for debugging purposes)
