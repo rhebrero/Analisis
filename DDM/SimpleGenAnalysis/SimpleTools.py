@@ -119,6 +119,14 @@ def makeSimple1DPlot(var, canvas, samples, title, xtitle, ytitle, output, folder
     Canvas.cd()
 
     plotted = False
+
+    Maximum = 0
+    Minimum = 999
+    #reduntand function to get the maximum and minimum
+    for index, hist in enumerate(var):
+        if hist.GetMaximum() > Maximum: Maximum = hist.GetMaximum()
+        if hist.GetMinimum() < Minimum: Minimum = hist.GetMinimum()
+
     for index, hist in enumerate(var):
         #needed to store the templates
         template.append(hist.Clone())
@@ -128,24 +136,31 @@ def makeSimple1DPlot(var, canvas, samples, title, xtitle, ytitle, output, folder
         normHist = 1
         if hist.Integral()> 0 and norm == True:
             hist.Scale(normHist/hist.Integral())
+
         if len(showOnly) >0:
             if samples.GetHistName()[index] not in showOnly:
                 continue
 
-        if plotted == True:
-            hist.Draw("hist same")
-
         if plotted == False:
-            Minimum = hist.GetMinimum()
-            Maximum = hist.GetMaximum()
 
-            if (Minimum >0.) and logy==False: hist.SetMinimum(.0)
-            if (Minimum >0.01) and logy==True: hist.SetMinimum(0.01)
-            if (Maximum >0.) and logy==False: hist.SetMaximum(1.3*hist.GetMaximum())
-#            if (Maximum >0.) and logy==True: hist.SetMaximum(1.3*hist.GetMaximum())
-#if (Maximum >0.) and logy==False: hist.SetMaximum(1.)
-            if (Maximum >0.) and logy==True and norm == True: hist.SetMaximum(1.3)
-            if (Maximum >0.) and logy==True and norm == False: hist.SetMaximum(1.3*hist.GetMaximum())
+            ## set Maximum a minimum for good visilibility
+            if logy==False:
+                hist.SetMinimum(.0)
+                if norm == True:
+                    hist.SetMaximum(1.3)
+                    hist.GetYaxis().SetRangeUser(0., 1.3)
+                else:
+                    hist.SetMaximum(1.3*Maximum)
+                    hist.GetYaxis().SetRangeUser(0., 1.3*Maximum)
+
+            if logy==True:
+                hist.SetMinimum(0.01)
+                if norm == True:
+                    hist.SetMaximum(1.5)
+                    hist.GetYaxis().SetRangeUser(0., 1.5)
+                else:
+                    hist.SetMaximum(2*Maximum)
+                    hist.GetYaxis().SetRangeUser(0., 2*Maximum)
 
             hist.Draw("hist")
             hist.SetTitle(title)
@@ -155,6 +170,8 @@ def makeSimple1DPlot(var, canvas, samples, title, xtitle, ytitle, output, folder
             Yaxis = hist.GetYaxis()
             Yaxis.SetTitle(ytitle)
             plotted = True
+        else:
+            hist.Draw("hist same")
 
         leg.AddEntry(var[index], samples.GetLegendName()[index], "l")
 
