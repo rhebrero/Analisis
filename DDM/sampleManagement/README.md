@@ -9,5 +9,7 @@
     python copyNTuplesCIEMAT.py -debug
     # actual run
     python copyNTuplesCIEMAT.py 
+    # sync only one folder (e.g rNTuples)
+    python copyNTuplesCIEMAT.py -f rNTuples
     ```
 
