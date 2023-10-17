@@ -32,6 +32,18 @@ python3 runSimpleGenTriggerSim.py --trigger HLT_DoubleL2Mu23NoVtx_2Cha_v3,HLT_Do
 3.  `SimpleGenTriggerSim_RPVvsBenchmark.py` is a more complex analyzer that also supports RPV SUSY samples. It is configured via `runSimpleGenTriggerSim_RPVvsBenchmark_eos.py` and it was tested with files
 store in `T2_AT_Vienna`.
 
+```bash
+# Example of running on single file stored in pnfs
+python3 SimpleGenTriggerSim_RPVvsBenchmark.py \
+--inputFile /pnfs/ciemat.es/data/cms/store/user/escalant/HTo2LongLivedTo2mu2jets_MH-125_MFF-20_CTau-130mm_TuneCP5_13p6TeV_pythia8/crab_HTo2LongLivedTo2mu2jets_MH-125_MFF-20_CTau-130mm_TuneCP5_13p6TeV_pythia8_GS-October2023_ToDelete/231017_102029/0000/HTo2LongLivedTo2mu2jets_MH-125_MFF-20_CTau-130mm_TuneCP5_13p6TeV_pythia8_GS_1.root \
+--trigger all \
+--label 125_20_130 \
+--color 1 \
+--triggerlabel SIM \
+--outFolder /nfs/cms/escalante/plots/sandbox/ \
+/
+```
+
 4. `ValidateMiniAOD.py` this is an example to run on MiniAOD, it is now deprecated.
 
 ## To-do

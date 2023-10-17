@@ -13,4 +13,4 @@ These scripts are liked to `plotters` and `analyzer` via:
 
 `python linkUtils.py`
 
-To be used, these scripts need to be imported. 
+*update*: linking is not needed anymore, now packages are loaded via `utils/getLibraries.py`. 
