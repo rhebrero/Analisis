@@ -46,8 +46,8 @@ def GetFilesFromSampleName(folderList):
     prefix = "ls "
     samplePrefix = ""
 
-    if "/store/" in folderList[0] and ".cbe.vbc.ac.at" not in os.environ["HOSTNAME"] and "clip-" not in os.environ["HOSTNAME"]:
-        #only used the prefix while working outside clip or clip batch (my T2)
+    if "/store/" in folderList[0] and ".cbe.vbc.ac.at" not in os.environ["HOSTNAME"] and "clip-" not in os.environ["HOSTNAME"] and "ciemat.es" not in os.environ["HOSTNAME"]:
+        # only used the prefix while working outside clip or clip batch (my T2)
         print ("I need a proxy, I am at: ", os.environ["HOSTNAME"])
         prefix = "gfal-ls gsiftp://se.grid.vbc.ac.at:2811"
         samplePrefix = "root://eos.grid.vbc.ac.at/"
@@ -157,10 +157,10 @@ def makeSimple1DPlot(var, canvas, samples, title, xtitle, ytitle, output, folder
                 hist.SetMinimum(0.01)
                 if norm == True:
                     hist.SetMaximum(1.5)
-                    hist.GetYaxis().SetRangeUser(0., 1.5)
+                    hist.GetYaxis().SetRangeUser(0.01, 1.5)
                 else:
                     hist.SetMaximum(2*Maximum)
-                    hist.GetYaxis().SetRangeUser(0., 2*Maximum)
+                    hist.GetYaxis().SetRangeUser(0.01, 2*Maximum)
 
             hist.Draw("hist")
             hist.SetTitle(title)

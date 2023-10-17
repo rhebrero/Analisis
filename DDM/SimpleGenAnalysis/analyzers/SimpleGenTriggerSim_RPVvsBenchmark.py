@@ -32,7 +32,6 @@ import argparse
 parser = argparse.ArgumentParser(description="Simple gen analyzer, compatible with RPV, Benchmark and Darkphoton")
 
 parser.add_argument('--inputFile'    , dest='INPUTFILE'    , default=''         , help='input file')
-#parser.add_argument('--process'      , dest='PROCESS'      , default=''         , help='process to be written in histograms')
 parser.add_argument('--trigger'      , dest='TRIGGER'      , default=''         , help='input file (with scripts to run on)')
 parser.add_argument('--label'        , dest='LABEL'        , default=''         , help='suffix for histograms and output folder')
 parser.add_argument('--color'        , dest='COLOR'        , default=1          , help='color')
@@ -291,7 +290,7 @@ for index, ksample in enumerate(sampleName):
                                     fsmuons = findFinalStateMuons(daus)
                                     if len(fsmuons) != 2:
                                         print ("+++ Wrong muon multiplicity +++")
-                                        break;
+                                        break
 
                                     #print ("pTs of final state muons:", round(fsmuons[0].pt(),2), round(fsmuons[1].pt(),2))
                                     dimu_px = fsmuons[0].px() + fsmuons[1].px()
