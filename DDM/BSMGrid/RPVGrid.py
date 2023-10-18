@@ -121,7 +121,7 @@ if options.model == "RPV":
     samples.append({"massSquark": 1500, "massChi": 494, "ctauChi":lifetimeGrid, "tag":tag})
     samples.append({"massSquark": 1000, "massChi": 148, "ctauChi":lifetimeGrid, "tag":tag})
     samples.append({"massSquark":  350, "massChi": 148, "ctauChi":lifetimeGrid, "tag":tag})
-    samples.append({"massSquark":  200, "massChi":  48, "ctauChi":lifetimeGrid, "tag":tag})
+    #samples.append({"massSquark":  200, "massChi":  48, "ctauChi":lifetimeGrid, "tag":tag})
     samples.append({"massSquark":  120, "massChi":  48, "ctauChi":lifetimeGrid, "tag":tag})
 
     tag = "RunII_ATLAS"
