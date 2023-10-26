@@ -50,6 +50,15 @@ python3 SimpleGenTriggerSim_RPVvsBenchmark.py \
 --color 1 \
 --triggerlabel SIM \
 --outFolder /nfs/cms/escalante/plots/sandbox/ \
+
+# Example of running on ALL files in a given directory in pnfs, SMUONS
+python3 SimpleGenTriggerSim_RPVvsBenchmark.py \
+--inputFile /pnfs/ciemat.es/data/cms/store/user/escalant/SMuonToMuGravitino-MSmuon_300_ctau_100mm_TuneCP5_13p6TeV_pythia8/crab_SMuonToMuGravitino-MSmuon_300_ctau_100mm_TuneCP5_13p6TeV_pythia8_GS-October2023_ToDelete/231026_133146/0000/ \
+--trigger all \
+--label smuon_300 \
+--color 1 \
+--triggerlabel SIM \
+--outFolder /nfs/cms/escalante/plots/sandbox/ \
 ```
 
 4. `ValidateMiniAOD.py` this is an example to run on MiniAOD, it is now deprecated.

@@ -22,7 +22,10 @@ from GenLongLivedUtils import *
 from SimpleTools import *
 from myMathUtils import *
 
-#bash utils
+# debug tools 
+import pdb
+
+# bash utils
 import os
 
 #configuration file
@@ -39,7 +42,9 @@ parser.add_argument('--triggerlabel' , dest='TRIGGERLABEL' , default='HLT'      
 parser.add_argument('--nevents'      , dest='NEVENTS'      , default=-1         , help='number of processed events')
 parser.add_argument('--acceptance'   , dest='ACCEPTANCE'   , default=False      , help='apply basic acceptance cuts')
 parser.add_argument('--outFolder'    , dest='OUTFOLDER'    , default=''         , help='output folder')
-parser.add_argument('--LHE '         , dest='LHE'          , default=False      , help='run on LHE root file')
+parser.add_argument('--LHE'          , dest='LHE'          , default=False      , help='run on LHE root file')
+parser.add_argument('--model'        , dest='model'        , default=""         , help='model (BENCHMARK, HAHM, RPV, STOP, SMUON)', required = True)
+parser.add_argument('--verbose'      , dest='verbose'      , default=0          , help='increase verbosity (levels 0, 1, 2)')
 
 args = parser.parse_args()
 
@@ -61,7 +66,6 @@ print ("will write output in {OUTFOLDERWITHLABEL}".format(OUTFOLDERWITHLABEL=out
 
 samples = Sample()
 
-import pdb
 #samples.AddSample(args.INPUTFILE    , 'M_{H}=125, M_{X}=20, ALL'               , '125_20_CTau_130cm_ALL'         , 1)
 samples.AddSample(args.INPUTFILE    , args.LABEL           , args.LABEL  , int(args.COLOR))
 #samples.AddSample(samplesDir+ signal, 'L1'                                     , '125_20_CTau_130cm_L1'          , 14) # Gray
@@ -88,8 +92,10 @@ handlePruned  = Handle ("std::vector<reco::GenParticle>")
 labelPruned = ("genParticles")
 
 # GEN PARTICLES
-motherPdgID = getSignalPdgID()["mother"]
-daughterPdgID = getSignalPdgID()["daughter"]
+motherPdgID = getSignalPdgID(args.model)["mother"]
+#daughterPdgID = getSignalPdgID(args.model)["daughter"]
+longlivedPdgID = getSignalPdgID(args.model)["LLP"]
+otherPdgID = getSignalPdgID(args.model)["otherBSM"]
 
 handleTriggerBits = Handle("edm::TriggerResults")        
 labelTriggerBits  = ("TriggerResults","", args.TRIGGERLABEL) 
@@ -224,9 +230,14 @@ for index, ksample in enumerate(sampleName):
                 triggerBits = handleTriggerBits.product()  
                 HLTTriggerNames = events.object().triggerNames(triggerBits)
                 triggerInfo = True
+                if int(args.verbose) >= 1:
+                    print("len(triggerBits)", len(triggerBits))
+                    for k in range(triggerBits.size()):
+                        if triggerBits.accept(k):
+                            print ("Triggers fired: ", HLTTriggerNames.triggerName(k))
             except:
                 print ("WARNING: HLTTriggerNames not found")
-                
+            
             #did the event trigger the event?
             triggered = False        
             if len(triggerList) > 0 and triggerInfo == True:
@@ -235,7 +246,7 @@ for index, ksample in enumerate(sampleName):
                         #print ("Triggers fired: ", HLTTriggerNames.triggerName(i))
                         for kTriggerList in triggerList:
                             if HLTTriggerNames.triggerName(i) == kTriggerList:
-                                #print ("FIRED", index, triggerList, HLTTriggerNames.triggerName(i))
+                                #print ("FIRED", index, triggerList, HLTTriggerNames.triggerName(k))
                                 triggered = True
                                 break
             else: 
@@ -244,13 +255,15 @@ for index, ksample in enumerate(sampleName):
 
             if triggered == True:
                 for p in genParticles:
-                    #tellMeMore(p)
+                    # tellMeMore(p)
                     if abs(p.pdgId()) == 2212:
                         h_pzProton[index].Fill(abs(p.pz()))
-                    if p.isHardProcess() or abs(p.pdgId()) in daughterPdgID: #sometimes (e.g RPV, the daughter does not appear as hard process)
-                        if abs(p.pdgId()) in motherPdgID: #Plotting something from the Higgs, scalar Phi, or squark
+                    if p.isHardProcess() or abs(p.pdgId()) in longlivedPdgID: #sometimes (e.g RPV, the daughter does not appear as hard process)
+                        tellMeMore(p)
+
+                        if abs(p.pdgId()) in motherPdgID: #Plotting something from the Higgs, scalar Phi, or squark, stop, smuon
                             h_massHiggs[index].Fill(p.mass())
-                        if abs(p.pdgId()) in daughterPdgID: #Plotting something from the X, Zd, or chi_10 
+                        if abs(p.pdgId()) in longlivedPdgID: #Plotting something from the X, Zd, or chi_10, smuon, stop
 
                             alldaus = p.daughterRefVector()
                             if len(alldaus) == 1 and alldaus[0].pdgId() == p.pdgId(): continue # remove repeated gen particles (only appearing in RPV) 
@@ -260,7 +273,9 @@ for index, ksample in enumerate(sampleName):
                             ptX = p.pt()
                             h_ptX[index].Fill(ptX)
 
-                            h_ptOvermassX[index].Fill(ptX/massX)
+                            if massX >0:
+                                # for smuon, X particle could be massless
+                                h_ptOvermassX[index].Fill(ptX/massX)
 
                             genBeta = sqrt(p.energy()*p.energy() - p.mass()*p.mass())/p.energy()
                             h_betaX[index].Fill(genBeta) 
@@ -436,7 +451,6 @@ for index, ksample in enumerate(sampleName):
                                         #################
                                         # corrected mass#                                        
                                         #################
-                                        #import pdb
                                         corr_mass_2d = sqrt(dimu_mass**2+sin(dphi)*sin(dphi)*dimu_pt**2)+dimu_pt*sin(dphi)
                                         corr_mass = sqrt(dimu_mass**2+sin(dtheta)*sin(dtheta)*dimu_p**2)+dimu_p*sin(dtheta)
                                         h_corrdimumass_2d[index].Fill(corr_mass_2d)
@@ -444,7 +458,6 @@ for index, ksample in enumerate(sampleName):
                                         h_corrdimumass[index].Fill(corr_mass)
                                         h_corrdimumass_l[index].Fill(corr_mass)
                                         print(massX, dimu_mass, corr_mass_2d, corr_mass)
-                                        #pdb.set_trace()
                                         
                                         #################
                                         h_proptime[index].Fill(fsmuons[0].vertex().rho()*10*massX/ptX) #convert lxy from cm to mm

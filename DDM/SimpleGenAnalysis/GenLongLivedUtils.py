@@ -3,30 +3,51 @@ from RecoUtils import *
 from myMathUtils import *
 from ResolutionUtils import *
 
-def getSignalPdgID():
+def getSignalPdgID(model):
     """
-    List with all PDG IDs for Benchmark, DarkPhoton, and RPV.
+    List with all PDG IDs for Benchmark, HAHM, RPV, STOP, SMUON.
     """
-    pdgID = {"mother":[], "daughter":[]}
+    pdgID = {"mother":[], "LLP":[], "otherBSM":[]}
 
-    pdgID["mother"].append(35) # Phi
-    pdgID["mother"].append(25) # SM h
+    if model == "HAHM":
+        pdgID["mother"].append(25) # SM h
+        pdgID["LLP"].append(1023) # X
 
-    pdgID["mother"].append(1000001) # ~d_L
-    pdgID["mother"].append(2000001) # ~d_R
-    pdgID["mother"].append(1000002) # ~u_L
-    pdgID["mother"].append(2000002) # ~u_R
-    pdgID["mother"].append(1000003) # ~s_L
-    pdgID["mother"].append(2000003) # ~s_R
-    pdgID["mother"].append(1000004) # ~c_L
-    pdgID["mother"].append(2000004) # ~c_R
-    pdgID["mother"].append(1000005) # ~b_1
-    pdgID["mother"].append(2000005) # ~b_2
-    pdgID["mother"].append(1000006) # ~t_1
-    
-    pdgID["daughter"].append(6000113) # X
-    pdgID["daughter"].append(1023)    # Zd
-    pdgID["daughter"].append(1000022) # ~chi_10
+    if model == "BENCHMARK":
+        pdgID["mother"].append(35) # Phi
+        pdgID["LLP"].append(6000113) # X
+
+    if model == "RPV":
+        pdgID["mother"].append(1000001) # ~d_L
+        pdgID["mother"].append(2000001) # ~d_R  
+        pdgID["mother"].append(1000002) # ~u_L
+        pdgID["mother"].append(2000002) # ~u_R
+        pdgID["mother"].append(1000003) # ~s_L
+        pdgID["mother"].append(2000003) # ~s_R
+        pdgID["mother"].append(1000004) # ~c_L
+        pdgID["mother"].append(2000004) # ~c_R
+        pdgID["mother"].append(1000005) # ~b_1
+        pdgID["mother"].append(2000005) # ~b_2
+        pdgID["mother"].append(1000006) # ~t_1
+        pdgID["LLP"].append(1000022) # ~chi_10
+
+    if model == "SMUON":
+        #to be improved mothers for SMUON
+        pdgID["mother"].append(1000011) # ~selectron_L
+        pdgID["mother"].append(2000011) # ~selectron_R
+        pdgID["mother"].append(1000013) # ~muon_L
+        pdgID["mother"].append(2000013) # ~muon_R
+        pdgID["mother"].append(1000015) # ~stau_L
+        pdgID["mother"].append(2000015) # ~stau_R
+
+        pdgID["LLP"].append(1000011) # ~selectron_L
+        pdgID["LLP"].append(2000011) # ~selectron_R
+        pdgID["LLP"].append(1000013) # ~muon_L
+        pdgID["LLP"].append(2000013) # ~muon_R
+        pdgID["LLP"].append(1000015) # ~stau_L
+        pdgID["LLP"].append(2000015) # ~stau_R
+        
+        pdgID["otherBSM"].append(1000039) # Gravitino
 
     return pdgID
 
