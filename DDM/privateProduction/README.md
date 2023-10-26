@@ -27,6 +27,7 @@ python createGENFragments.py -m SLEPTON
 ```
 
 submit: 
-
-`python crabGenerationGenProd.py -f submission -v GS-October2023_ToDelete -s 100 -n 1000 -d`
+```bash
+python crabGenerationGenProd.py -f submission -v GS-October2023_ToDelete -s 100 -n 1000 -d
+```
 
