@@ -3,7 +3,7 @@ import os
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
-parser.add_argument("-m", "--model", dest="model", help="specify model, supported values: Benchmark, HAHM, RPV", required=True)
+parser.add_argument("-m", "--model", dest="model", help="specify model, supported values: Benchmark, HAHM, RPV, STOP, SLEPTON", required=True)
 parser.add_argument("-n", "--nevents", dest="nevents", help="number of events, default is 100", required=False, default = 100)
 
 options = parser.parse_args()
@@ -11,8 +11,19 @@ options = parser.parse_args()
 SUSY = "Configuration/GenProduction/python/ThirteenPointSixTeV/Fragments2022_RPV/"
 BENCHMARK = "Configuration/GenProduction/python/ThirteenPointSixTeV/Fragments2022_Benchmark/"
 HAHM = "Configuration/GenProduction/python/ThirteenPointSixTeV/Fragments2022_HAHM/"
+STOP = "Configuration/GenProduction/python/ThirteenPointSixTeV/Fragments2022_Stop/"
+SLEPTON = "Configuration/GenProduction/python/ThirteenPointSixTeV/Fragments2022_Slepton/"
 
 samples = []
+
+# Stop samples
+if options.model == "STOP":
+    samples.append(STOP + "StopToMuB-M_700_ctau_50mm_TuneCP5_13p6TeV_pythia8_cff.py" )
+    samples.append(STOP + "StopToMuD-M_700_ctau_50mm_TuneCP5_13p6TeV_pythia8_cff.py" )
+
+# Slepton samples
+if options.model == "SLEPTON":
+    samples.append(SLEPTON + "SMuonToMuGravitino-MSmuon_300_ctau_100mm_TuneCP5_13p6TeV_pythia8_cff.py" )
 
 #RPV SUSY
 if options.model == "RPV":
@@ -26,7 +37,7 @@ if options.model == "RPV":
     fragments.append({"massSquark": 200, "massChi":  50, "ctauChi":[15, 150, 1500]})
     fragments.append({"massSquark": 200, "massChi": 175, "ctauChi":[40, 400, 4000]})
 
-    fragments.append({"massSquark": 350, "massChi":  50, "ctauChi":[7, 70, 700]})
+    fragments.append({"massSquark": 350, "massChi":  50, "ctauChi":[8, 80, 800]})
     fragments.append({"massSquark": 350, "massChi": 150, "ctauChi":[25, 250, 2500]})
     fragments.append({"massSquark": 350, "massChi": 325, "ctauChi":[45, 450, 4500]})
 
@@ -34,14 +45,14 @@ if options.model == "RPV":
     fragments.append({"massSquark": 700, "massChi": 500, "ctauChi":[40, 400, 4000]})
     fragments.append({"massSquark": 700, "massChi": 675, "ctauChi":[50, 500, 5000]})
 
-    fragments.append({"massSquark": 1150, "massChi":   50, "ctauChi":[4,  40, 400]})
+    fragments.append({"massSquark": 1150, "massChi":   50, "ctauChi":[3,  30, 300]})
     fragments.append({"massSquark": 1150, "massChi":  500, "ctauChi":[30, 300, 3000]})
-    fragments.append({"massSquark": 1150, "massChi":  950, "ctauChi":[40, 400, 4000]})
-    fragments.append({"massSquark": 1150, "massChi": 1125, "ctauChi":[50, 500, 5000]})
+    fragments.append({"massSquark": 1150, "massChi":  950, "ctauChi":[50, 500, 5000]})
+    fragments.append({"massSquark": 1150, "massChi": 1125, "ctauChi":[60, 600, 6000]})
 
-    fragments.append({"massSquark": 1600, "massChi":   50, "ctauChi":[3, 30, 300]})
+    fragments.append({"massSquark": 1600, "massChi":   50, "ctauChi":[2, 20, 200]})
     fragments.append({"massSquark": 1600, "massChi":  500, "ctauChi":[20, 200, 2000]})
-    fragments.append({"massSquark": 1600, "massChi":  950, "ctauChi":[30, 300, 3000]})
+    fragments.append({"massSquark": 1600, "massChi":  950, "ctauChi":[40, 400, 4000]})
     fragments.append({"massSquark": 1600, "massChi": 1400, "ctauChi":[60, 600, 6000]})
     fragments.append({"massSquark": 1600, "massChi": 1575, "ctauChi":[70, 700, 7000]})
 
