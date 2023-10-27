@@ -18,13 +18,23 @@ samples = []
 
 # Stop samples
 if options.model == "STOP":
-    samples.append(STOP + "StopToMuB-M_700_ctau_50mm_TuneCP5_13p6TeV_pythia8_cff.py" )
-    samples.append(STOP + "StopToMuD-M_700_ctau_50mm_TuneCP5_13p6TeV_pythia8_cff.py" )
+    samples.append(STOP + "StopToMuB-M_700_ctau_50mm_TuneCP5_13p6TeV_pythia8_cff.py")
+    samples.append(STOP + "StopToMuD-M_700_ctau_50mm_TuneCP5_13p6TeV_pythia8_cff.py")
+    #grid to be determined    
+    samples.append(STOP + "StopToMuD-M_1500_ctau_100mm_TuneCP5_13p6TeV_pythia8_cff.py")
+    samples.append(STOP + "StopToMuD-M_1000_ctau_1000mm_TuneCP5_13p6TeV_pythia8_cff.py")
 
 # Slepton samples
 if options.model == "SLEPTON":
-    samples.append(SLEPTON + "SMuonToMuGravitino-MSmuon_300_ctau_100mm_TuneCP5_13p6TeV_pythia8_cff.py" )
-
+    samples.append(SLEPTON + "SMuonToMuGravitino-MSmuon_300_ctau_100mm_TuneCP5_13p6TeV_pythia8_cff.py")
+    # mass and ctau
+    samples.append(SLEPTON + "SMuonToMuGravitino-M_100_ctau_8000mm_TuneCP5_13p6TeV_pythia8_cff.py")
+    samples.append(SLEPTON + "SMuonToMuGravitino-M_200_ctau_6000mm_TuneCP5_13p6TeV_pythia8_cff.py")
+    samples.append(SLEPTON + "SMuonToMuGravitino-M_300_ctau_4000mm_TuneCP5_13p6TeV_pythia8_cff.py")
+    samples.append(SLEPTON + "SMuonToMuGravitino-M_400_ctau_2000mm_TuneCP5_13p6TeV_pythia8_cff.py")
+    samples.append(SLEPTON + "SMuonToMuGravitino-M_500_ctau_1000mm_TuneCP5_13p6TeV_pythia8_cff.py")
+    samples.append(SLEPTON + "SMuonToMuGravitino-M_700_ctau_700mm_TuneCP5_13p6TeV_pythia8_cff.py")
+    
 #RPV SUSY
 if options.model == "RPV":
     #lifetimeGrid = [1, 10, 100, 1000, 10000]
