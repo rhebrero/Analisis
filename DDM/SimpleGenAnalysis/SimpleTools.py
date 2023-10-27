@@ -111,8 +111,9 @@ def makeSimple1DPlot(var, canvas, samples, title, xtitle, ytitle, output, folder
 
     ROOT.gStyle.SetOptStat(0)
 
-#    leg = ROOT.TLegend(0.65,0.55,.90,.90)
-    leg = ROOT.TLegend(0.55,0.65,.90,.90)
+    nsamples = len(var)
+    leg = ROOT.TLegend(0.55,0.9 - nsamples*0.1,.90,.90)
+    leg.SetTextSize(0.042)
     leg.SetFillColor(0)
 
     Canvas = ROOT.TCanvas(canvas, title, 10, 10, 700, 500 )

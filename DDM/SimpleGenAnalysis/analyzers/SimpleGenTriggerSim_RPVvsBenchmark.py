@@ -54,6 +54,7 @@ if (len(args.INPUTFILE) == 0 or len(args.OUTFOLDER) == 0 or len(args.LABEL) == 0
 
 print ("running on jobs in {INPUTFILE}".format(INPUTFILE=args.INPUTFILE) )
 
+# create output folder, if it does not exist
 outFolder = "{OUTFOLDER}/{LABEL}/".format(OUTFOLDER = args.OUTFOLDER, LABEL = args.LABEL)
 print (outFolder)
 if os.path.exists(outFolder) ==  False:
@@ -64,83 +65,72 @@ else:
 
 print ("will write output in {OUTFOLDERWITHLABEL}".format(OUTFOLDERWITHLABEL=outFolder))
 
+
+# add the sample to process 
 samples = Sample()
-
-#samples.AddSample(args.INPUTFILE    , 'M_{H}=125, M_{X}=20, ALL'               , '125_20_CTau_130cm_ALL'         , 1)
 samples.AddSample(args.INPUTFILE    , args.LABEL           , args.LABEL  , int(args.COLOR))
-#samples.AddSample(samplesDir+ signal, 'L1'                                     , '125_20_CTau_130cm_L1'          , 14) # Gray
-#samples.AddSample(samplesDir+ signal, 'L2'                                     , '125_20_CTau_130cm_L2'          , 2)  # Red
-#samples.AddSample(samplesDir+ signal, 'L2VetoPrompt'                           , '125_20_CTau_130cm_L2VetoPrompt', 4)  # Blue
-#samples.AddSample(samplesDir+ signal, 'L3Displaced'                            , '125_20_CTau_130cm_L3Displaced' , 8)  # Greed
-#samples.AddSample(samplesDir+ signal, 'HLT'                                    , '125_20_CTau_130cm_HLT'         , 28) # Brown
 
+# other samples could be added (to be implemented as argument value, in practice not recommended)
+#samples.AddSample(samplesDir+ signal, 'L1'                                     , '125_20_CTau_130cm_L1'          , 14) # Gray
+
+# get vectors for samples, legends and histograms
 sampleName = samples.GetSampleName()
 legendName = samples.GetLegendName()
 histName = samples.GetHistName()
 
-#Type                                  Module                      Label     Process   
-#--------------------------------------------------------------------------------------
-#edm::TriggerResults                   "TriggerResults"            ""        "SIM"     
-#edm::TriggerResults                   "TriggerResults"            ""        "HLT"     
-#vector<reco::GenParticle>             "genParticles"              ""        "HLT"     
-#trigger::TriggerEvent                 "hltTriggerSummaryAOD"      ""        "HLT"     
-#edm::TriggerResults                   "TriggerResults"            ""        "HLTX"    
-#trigger::TriggerEvent                 "hltTriggerSummaryAOD"      ""        "HLTX" 
-
-# FOR GEN-SIM
+# Gen sim collections
 handlePruned  = Handle ("std::vector<reco::GenParticle>")
 labelPruned = ("genParticles")
 
-# GEN PARTICLES
-motherPdgID = getSignalPdgID(args.model)["mother"]
-#daughterPdgID = getSignalPdgID(args.model)["daughter"]
-longlivedPdgID = getSignalPdgID(args.model)["LLP"]
-otherPdgID = getSignalPdgID(args.model)["otherBSM"]
-
+# Other collections 
 handleTriggerBits = Handle("edm::TriggerResults")        
 labelTriggerBits  = ("TriggerResults","", args.TRIGGERLABEL) 
 
 handleBeamspot  = Handle("reco::BeamSpot")
 labelBeamspot  = ("hltOnlineBeamSpot","", args.TRIGGERLABEL) 
 
-#1D Histograms Gen Level
+# Getting information of model (HAHM, RPV, BENCHMARK, STAU, STOP)
+motherPdgID = getSignalPdgID(args.model)["mother"]
+longlivedPdgID = getSignalPdgID(args.model)["LLP"]
+otherPdgID = getSignalPdgID(args.model)["otherBSM"]
 
-h_pzProton  = createSimple1DPlot("h_pzProton", "p_{z} proton", 150, 6000, 7500., samples)
-h_massHiggs = createSimple1DPlot("h_massHiggs", "M_{H}", 200, 100., 1600., samples)
-h_massX     = createSimple1DPlot("h_massX", "M_{X}"    , 200, 0., 500., samples)
-h_ptX       = createSimple1DPlot("h_ptX", "p^{X}_{T}"  , 200, 0., 500., samples)
-h_ptOvermassX = createSimple1DPlot("h_ptOvermass", "p_{T}/M_{X}"  , 100, 0., 10., samples)
-h_betaX     = createSimple1DPlot("h_beta", "#beta_{X}"  , 100, 0., 1., samples)
-h_muMulti   = createSimple1DPlot("", "h_muMulti"       , 4, 0., 4., samples)
+# 1D Histograms Gen Level
+h_pzProton       = createSimple1DPlot("", "h_pzProton", 150, 6000, 7500., samples)
+h_massHiggs      = createSimple1DPlot("", "h_massHiggs", 200, 100., 1600., samples)
+h_massX          = createSimple1DPlot("", "h_massX", 200, 0., 500., samples)
+h_ptX            = createSimple1DPlot("", "h_ptX", 200, 0., 500., samples)
+h_ptOvermassX    = createSimple1DPlot("", "h_ptOvermass", 100, 0., 10., samples)
+h_betaX          = createSimple1DPlot("", "h_beta", 100, 0., 1., samples)
+h_muMulti        = createSimple1DPlot("", "h_muMulti"       , 4, 0., 4., samples)
 h_genTriggerDiff = createSimple1DPlot("", "h_genTriggerDiff"    , 6, 0., 6., samples)
-h_genTrigger = createSimple1DPlot("", "h_genTrigger"    , 2, 0., 2., samples)
-h_lxy_s     = createSimple1DPlot("h_lxy_s", "lxy_s"      , 300,  0., 100., samples)
-h_lxy       = createSimple1DPlot("h_lxy", "lxy"       , 300,  0., 300., samples)
-h_dxyMuons  = createSimple1DPlot("", "h_dxyMuons"      , 100,  0.,   50., samples)
-h_dzMuons   = createSimple1DPlot("", "h_dzMuons"       , 100,  0.,  100., samples)
-h_ptMuons   = createSimple1DPlot("", "h_ptMuons"       , 100,  0.,  250., samples)
-h_mindxyMuons  = createSimple1DPlot("", "h_mindxyMuons", 100,  0.,   1., samples)
-h_mindxygenMuons  = createSimple1DPlot("", "h_mindxygenMuons", 100,  0.,   1., samples)
-h_mindzMuons   = createSimple1DPlot("", "h_mindzMuons" , 100,  0.,  30., samples)
-h_minptMuons   = createSimple1DPlot("", "h_minptMuons" ,  60,  0.,  60., samples)
-h_minptMuons_l = createSimple1DPlot("", "h_minptMuons_l" , 200,  0., 200., samples)
-h_maxptMuons   = createSimple1DPlot("", "h_maxptMuons" ,  60,  0.,  60., samples)
-h_dimumass    = createSimple1DPlot("", "h_dimumass"    , 120, 0., 120., samples)
-h_corrdimumass = createSimple1DPlot("", "h_corrdimumass"    , 120, 0., 120., samples)
+h_genTrigger     = createSimple1DPlot("", "h_genTrigger"    , 2, 0., 2., samples)
+h_lxy_s          = createSimple1DPlot("", "lxy_s"      , 300,  0., 100., samples)
+h_lxy            = createSimple1DPlot("", "lxy"       , 300,  0., 300., samples)
+h_dxyMuons       = createSimple1DPlot("", "h_dxyMuons"      , 100,  0.,   50., samples)
+h_dzMuons        = createSimple1DPlot("", "h_dzMuons"       , 100,  0.,  100., samples)
+h_ptMuons        = createSimple1DPlot("", "h_ptMuons"       , 100,  0.,  250., samples)
+h_mindxyMuons    = createSimple1DPlot("", "h_mindxyMuons", 100,  0.,   1., samples)
+h_mindxygenMuons = createSimple1DPlot("", "h_mindxygenMuons", 100,  0.,   1., samples)
+h_mindzMuons     = createSimple1DPlot("", "h_mindzMuons" , 100,  0.,  30., samples)
+h_minptMuons     = createSimple1DPlot("", "h_minptMuons" ,  60,  0.,  60., samples)
+h_minptMuons_l   = createSimple1DPlot("", "h_minptMuons_l" , 200,  0., 200., samples)
+h_maxptMuons     = createSimple1DPlot("", "h_maxptMuons" ,  60,  0.,  60., samples)
+h_dimumass       = createSimple1DPlot("", "h_dimumass"    , 120, 0., 120., samples)
+h_corrdimumass   = createSimple1DPlot("", "h_corrdimumass"    , 120, 0., 120., samples)
 h_corrdimumass_2d = createSimple1DPlot("", "h_corrdimumass_2d"    , 120, 0., 120., samples)
-h_dimumass_l  = createSimple1DPlot("", "h_dimumass_l"  , 500, 0., 500., samples)
-h_corrdimumass_l  = createSimple1DPlot("", "h_corrdimumass_l"  , 500, 0., 500., samples)
-h_corrdimumass_2d_l  = createSimple1DPlot("", "h_corrdimumass_2d_l"  , 500, 0., 500., samples)
-h_dimupt     = createSimple1DPlot("", "h_dimupt"       , 120, 0., 120., samples)
-h_proptime   = createSimple1DPlot("", "h_proptime"     , 120, 0., 120., samples)
-h_proptime_l = createSimple1DPlot("", "h_proptime_l"   , 500, 0., 500., samples)
-h_etaMuons  = createSimple1DPlot("", "h_etaMuons"      , 100, -4.,    4., samples)
-h_dRMuons   = createSimple1DPlot("", "h_dRMuons"       , 100,  0.,    3., samples)
-h_cosalpha  = createSimple1DPlot("", "h_cosalpha"      , 100, -1.,    1., samples)
-h_alpha     = createSimple1DPlot("", "h_alpha"         , 100,  0.,   6.3, samples)
-h_dphi      = createSimple1DPlot("", "h_dphi"          , 100,  0.,   3.14, samples)
-h_lxyVslz   = createSimple2DPlot("h_lxyVslz", "lxy vs lz", 350, 0, 1000, 200, 0, 700, samples)
-h_dxyVsptrel = createSimple2DPlot("h_dxyVsptrel", "dxy vs pTrel", 100, 0., 50., 100, 0., 50., samples)
+h_dimumass_l     = createSimple1DPlot("", "h_dimumass_l"  , 500, 0., 500., samples)
+h_corrdimumass_l = createSimple1DPlot("", "h_corrdimumass_l"  , 500, 0., 500., samples)
+h_corrdimumass_2d_l = createSimple1DPlot("", "h_corrdimumass_2d_l"  , 500, 0., 500., samples)
+h_dimupt         = createSimple1DPlot("", "h_dimupt"       , 120, 0., 120., samples)
+h_proptime       = createSimple1DPlot("", "h_proptime"     , 120, 0., 120., samples)
+h_proptime_l     = createSimple1DPlot("", "h_proptime_l"   , 500, 0., 500., samples)
+h_etaMuons       = createSimple1DPlot("", "h_etaMuons"      , 100, -4.,    4., samples)
+h_dRMuons        = createSimple1DPlot("", "h_dRMuons"       , 100,  0.,    3., samples)
+h_cosalpha       = createSimple1DPlot("", "h_cosalpha"      , 100, -1.,    1., samples)
+h_alpha          = createSimple1DPlot("", "h_alpha"         , 100,  0.,   6.3, samples)
+h_dphi           = createSimple1DPlot("", "h_dphi"          , 100,  0.,   3.14, samples)
+h_lxyVslz        = createSimple2DPlot("h_lxyVslz", "lxy vs lz", 350, 0, 1000, 200, 0, 700, samples)
+h_dxyVsptrel     = createSimple2DPlot("h_dxyVsptrel", "dxy vs pTrel", 100, 0., 50., 100, 0., 50., samples)
 
 #1D Differential plots
 doResolution = False
@@ -482,46 +472,54 @@ for index, ksample in enumerate(sampleName):
     print ("PROCESSED ", count_events, "events")
     print ("\n")
 
-#makeSimple1DPlot(var, canvas, samples, title, xtitle, ytitle, output, folder, logy=False, showOnly = []):
+# getting labels for x and y-axis labels
+motherLatex = getSignalPdgID(args.model)["mother_latex"][0]
+longlivedLatex = getSignalPdgID(args.model)["LLP_latex"][0]
+if len(otherPdgID)>0:
+    otherLatex = getSignalPdgID(args.model)["otherBSM_latex"][0]
 
-makeSimple1DPlot(h_pzProton, 'h_pzProton', samples, '', 'p_{z} proton', 'events', 'h_pzProton', outFolder, logy=False, norm=False)
-makeSimple1DPlot(h_massHiggs, 'h_massHiggs', samples, '', 'M_{Higgs}', 'events', 'h_massHiggs', outFolder, logy=False, norm=False)
-makeSimple1DPlot(h_massX, 'h_massX', samples, '', 'M_{X}', 'events', 'h_massX', outFolder, logy=False, norm=False)
-makeSimple1DPlot(h_ptX, 'h_ptX', samples, '', 'p^{X}_{T}', 'events', 'h_ptX', outFolder, logy=False, norm=False)
-makeSimple1DPlot(h_betaX, 'h_betaX', samples, '', '#beta_{X}', 'events', 'h_betaX', outFolder, logy=False, norm=False)
-makeSimple1DPlot(h_ptOvermassX, 'h_ptOvermassX', samples, '', 'p_{T}/M_{X}', 'events', 'h_ptOvermassX', outFolder, logy=False, norm=False)
+# 1D distributions
+# makeSimple1DPlot(var, canvas, samples, title, xtitle, ytitle, output, folder, logy=False, showOnly = []):
+makeSimple1DPlot(h_pzProton, 'h_pzProton', samples, '', 'p_{Z} proton', 'events', 'h_pzProton', outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_massHiggs, 'h_massHiggs', samples, '', 'M_{MOTHER}'.format(MOTHER=motherLatex), 'events', 'h_massHiggs', outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_massX, 'h_massX', samples, '', 'M({LLP})'.format(LLP = longlivedLatex), 'events', 'h_massX', outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_ptX, 'h_ptX', samples, '', 'p_{T}({LLP})'.format(T="{T}", LLP = longlivedLatex), 'events', 'h_ptX', outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_betaX, 'h_betaX', samples, '', '#beta({LLP})'.format(LLP = longlivedLatex), 'events', 'h_betaX', outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_ptOvermassX, 'h_ptOvermassX', samples, '', 'p_{T}({LLP})/M({LLP})'.format(T="{T}", LLP=longlivedLatex), 'events', 'h_ptOvermassX', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_muMulti, 'h_muMulti', samples, '', '#mu multiplicity', 'events', 'h_muMulti', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_genTriggerDiff, 'h_genTriggerDiff', samples, '', 'gen level trigger', 'events', 'h_genTriggerDiff', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_genTrigger, 'h_genTrigger', samples, '', 'gen level trigger', 'events', 'h_genTrigger', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_lxy_s, 'h_lxy_s', samples, '', 'L_{xy}[cm]', 'events', 'h_lxy_s', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_lxy, 'h_lxy', samples, '', 'L_{xy}[cm]', 'events', 'h_lxy', outFolder, logy=True, norm=False)
 makeSimple2DPlot(h_lxyVslz, 'h_lxyVslz', samples, 'Generated L_{xy}[cm] vs L_{z}[cm]', 'L_{z}[cm]', 'L_{xy}[cm]', 'h_LxyVsLz', outFolder)
-makeSimple1DPlot(h_etaMuons, 'h_etaMuons', samples, '', 'eta', '', 'h_etaMuons', outFolder, logy=False, norm=False)
-makeSimple1DPlot(h_ptMuons, 'h_ptMuons', samples, '', 'pT [GeV]', '', 'h_ptMuons', outFolder, logy=False, norm=False)
-makeSimple1DPlot(h_dxyMuons, 'h_dxyMuons', samples, '', 'dxy [cm]', '', 'h_dxyMuons', outFolder, logy=True, norm=False)
-makeSimple1DPlot(h_dzMuons,  'h_dzMuons',  samples, '', 'dz [cm]',  '', 'h_dzMuons', outFolder, logy=False, norm=False)
-makeSimple1DPlot(h_minptMuons, 'h_minptMuons', samples, '', 'min pT [GeV]', '', 'h_minptMuons', outFolder, logy=True, norm=False)
-makeSimple1DPlot(h_minptMuons_l, 'h_minptMuons_l', samples, '', 'min pT [GeV]', '', 'h_minptMuons_l', outFolder, logy=True, norm=False)
-makeSimple1DPlot(h_maxptMuons, 'h_maxptMuons', samples, '', 'max pT [GeV]', '', 'h_maxptMuons', outFolder, logy=True, norm=False)
-makeSimple1DPlot(h_dimumass, 'h_dimumass', samples, '', 'm_{#mu#mu} [GeV]', '', 'h_dimumass', outFolder, logy=True, norm=False)
-makeSimple1DPlot(h_corrdimumass, 'h_corrdimumass', samples, '', 'corr. m_{#mu#mu} [GeV]', '', 'h_corrdimumas', outFolder, logy=True, norm=False)
-makeSimple1DPlot(h_corrdimumass_2d, 'h_corrdimumass_2d', samples, '', 'corr. m_{#mu#mu} 2d [GeV]', '', 'h_corrdimumas_2d', outFolder, logy=True, norm=False)
-makeSimple1DPlot(h_dimumass_l, 'h_dimumass_l', samples, '', 'm_{#mu#mu} [GeV]', '', 'h_dimumass_l', outFolder, logy=True, norm=False)
-makeSimple1DPlot(h_corrdimumass_l, 'h_corrdimumass_l', samples, '', 'corr. m_{#mu#mu} [GeV]', '', 'h_corrdimumass_l', outFolder, logy=True, norm=False)
-makeSimple1DPlot(h_corrdimumass_2d_l, 'h_corrdimumass_2d_l', samples, '', 'corr. m_{#mu#mu} 2d [GeV]', '', 'h_corrdimumass_2d_l', outFolder, logy=True, norm=False)
-makeSimple1DPlot(h_dimupt, 'h_dimupt', samples, '', 'dim p_{T} [GeV]', '', 'h_dimupt', outFolder, logy=True, norm=False)
-makeSimple1DPlot(h_proptime, 'h_proptime', samples, '', 'prop.time', '', 'h_proptime', outFolder, logy=True, norm=False)
-makeSimple1DPlot(h_proptime_l, 'h_proptime_l', samples, '', 'prop.time', '', 'h_proptime_l', outFolder, logy=True, norm=False)
-makeSimple1DPlot(h_mindxyMuons, 'h_mindxyMuons', samples, '', 'min dxy [cm]', '', 'h_mindxyMuons', outFolder, logy=True, norm=False)
-makeSimple1DPlot(h_mindxygenMuons, 'h_mindxygenMuons', samples, '', 'min dxy [cm]', '', 'h_mindxygenMuons', outFolder, logy=True, norm=False)
-makeSimple1DPlot(h_mindzMuons,  'h_mindzMuons',  samples, '', 'min dz [cm]',  '', 'h_mindzMuons', outFolder, logy=True, norm=False)
-makeSimple2DPlot(h_dxyVsptrel, 'h_dxyVsptrel', samples, 'dxy vs pT(mu,X)', 'pT(mu,X) [GeV]', 'dxy[cm]', 'h_dxyVsptrel', outFolder)
-makeSimple1DPlot(h_dRMuons,  'h_dRMuons',  samples, '', 'dR',         '', 'h_dRMuons',  outFolder, logy=False, norm=False)
-makeSimple1DPlot(h_cosalpha, 'h_cosalpha', samples, '', 'cos(alpha)', '', 'h_cosalpha', outFolder, logy=False, norm=False)
-makeSimple1DPlot(h_alpha,    'h_alpha',    samples, '', 'alpha',      '', 'h_alpha',    outFolder, logy=False, norm=False)
-makeSimple1DPlot(h_dphi,     'h_dphi',     samples, '', 'dphi',       '', 'h_dphi',     outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_etaMuons, 'h_etaMuons', samples, '', '#eta', 'events', 'h_etaMuons', outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_ptMuons, 'h_ptMuons', samples, '', 'p_{T} [GeV]', 'events', 'h_ptMuons', outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_dxyMuons, 'h_dxyMuons', samples, '', 'dxy [cm]', 'events', 'h_dxyMuons', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_dzMuons,  'h_dzMuons',  samples, '', 'dz [cm]', 'events', 'h_dzMuons', outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_minptMuons, 'h_minptMuons', samples, '', 'min(p_{T}) [GeV]', 'events', 'h_minptMuons', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_minptMuons_l, 'h_minptMuons_l', samples, '', 'min(p_{T}) [GeV]', 'events', 'h_minptMuons_l', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_maxptMuons, 'h_maxptMuons', samples, '', 'max(p_{T}) [GeV]', 'events', 'h_maxptMuons', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_dimumass, 'h_dimumass', samples, '', 'm_{#mu#mu} [GeV]', 'events', 'h_dimumass', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_corrdimumass, 'h_corrdimumass', samples, '', 'corr. m_{#mu#mu} [GeV]', 'events', 'h_corrdimumas', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_corrdimumass_2d, 'h_corrdimumass_2d', samples, '', 'corr. m_{#mu#mu} 2d [GeV]', 'events', 'h_corrdimumas_2d', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_dimumass_l, 'h_dimumass_l', samples, '', 'm_{#mu#mu} [GeV]', 'events', 'h_dimumass_l', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_corrdimumass_l, 'h_corrdimumass_l', samples, '', 'corr. m_{#mu#mu} [GeV]', 'events', 'h_corrdimumass_l', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_corrdimumass_2d_l, 'h_corrdimumass_2d_l', samples, '', 'corr. m_{#mu#mu} 2d [GeV]', 'events', 'h_corrdimumass_2d_l', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_dimupt, 'h_dimupt', samples, '', 'dim p_{T} [GeV]', 'events', 'h_dimupt', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_proptime, 'h_proptime', samples, '', 'prop.time', 'events', 'h_proptime', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_proptime_l, 'h_proptime_l', samples, '', 'prop.time', 'events', 'h_proptime_l', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_mindxyMuons, 'h_mindxyMuons', samples, '', 'min dxy [cm]', 'events', 'h_mindxyMuons', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_mindxygenMuons, 'h_mindxygenMuons', samples, '', 'min dxy [cm]', 'events', 'h_mindxygenMuons', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_mindzMuons,  'h_mindzMuons',  samples, '', 'min dz [cm]',  'events', 'h_mindzMuons', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_dRMuons,  'h_dRMuons',  samples, '', '#Delta R', 'events', 'h_dRMuons',  outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_cosalpha, 'h_cosalpha', samples, '', 'cos(#alpha)', 'events', 'h_cosalpha', outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_alpha,    'h_alpha',    samples, '', '#alpha', 'events', 'h_alpha',    outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_dphi,     'h_dphi',     samples, '', '$Delta #Phi', 'events', 'h_dphi',     outFolder, logy=False, norm=False)
 
-#1D Histograms Gen Level, differential plots.
+# 2D histograms
+makeSimple2DPlot(h_dxyVsptrel, 'h_dxyVsptrel', samples, 'dxy vs #Delta p_{T}(#mu,{LLP})', '#Delta p_{T}(#mu,{LLP}) [GeV]'.format(T="T", LLP= longlivedLatex), 'dxy[cm]', 'h_dxyVsptrel', outFolder)
+
+# 1D Histograms Gen Level, differential plots.
 if doResolution == True:
     for index, pT in enumerate(bins["pT"]):
         makeSimple1DPlot(h_dxyVspt_p[index], "h_dxyVspt_p_"+pT, samples, 'pT>'+pT, 'dxy_'+pT,    'Events', 'h_dxyVspt_p_'+pT,     outFolder, logy=True, norm=False)

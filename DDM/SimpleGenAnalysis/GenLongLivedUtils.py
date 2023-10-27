@@ -7,15 +7,19 @@ def getSignalPdgID(model):
     """
     List with all PDG IDs for Benchmark, HAHM, RPV, STOP, SMUON.
     """
-    pdgID = {"mother":[], "LLP":[], "otherBSM":[]}
+    pdgID = {"mother":[], "mother_latex":[], "LLP":[], "LLP_latex":[], "otherBSM":[], "otherBSM_latex":[]}
 
     if model == "HAHM":
         pdgID["mother"].append(25) # SM h
         pdgID["LLP"].append(1023) # X
+        pdgID["mother_latex"].append("h(125)") # SM h
+        pdgID["LLP_latex"].append("Z_{D}") # X
 
     if model == "BENCHMARK":
         pdgID["mother"].append(35) # Phi
         pdgID["LLP"].append(6000113) # X
+        pdgID["mother_latex"].append("H") # Phi
+        pdgID["LLP_latex"].append("X") # X
 
     if model == "RPV":
         pdgID["mother"].append(1000001) # ~d_L
@@ -29,16 +33,20 @@ def getSignalPdgID(model):
         pdgID["mother"].append(1000005) # ~b_1
         pdgID["mother"].append(2000005) # ~b_2
         pdgID["mother"].append(1000006) # ~t_1
+        pdgID["mother_latex"].append("#tilde{q}") # ~t_1
+
         pdgID["LLP"].append(1000022) # ~chi_10
+        pdgID["LLP_latex"].append("\chi") # ~chi_10
 
     if model == "SMUON":
         #to be improved mothers for SMUON
-        pdgID["mother"].append(1000011) # ~selectron_L
-        pdgID["mother"].append(2000011) # ~selectron_R
-        pdgID["mother"].append(1000013) # ~muon_L
-        pdgID["mother"].append(2000013) # ~muon_R
-        pdgID["mother"].append(1000015) # ~stau_L
-        pdgID["mother"].append(2000015) # ~stau_R
+        pdgID["mother"].append(1) # d
+        pdgID["mother"].append(2) # u
+        pdgID["mother"].append(3) # s
+        pdgID["mother"].append(4) # c
+        pdgID["mother"].append(5) # b
+        pdgID["mother"].append(6) # t
+        pdgID["mother_latex"].append("q") 
 
         pdgID["LLP"].append(1000011) # ~selectron_L
         pdgID["LLP"].append(2000011) # ~selectron_R
@@ -46,8 +54,10 @@ def getSignalPdgID(model):
         pdgID["LLP"].append(2000013) # ~muon_R
         pdgID["LLP"].append(1000015) # ~stau_L
         pdgID["LLP"].append(2000015) # ~stau_R
-        
+        pdgID["LLP_latex"].append("#tilde{l}") # ~stau_R
+
         pdgID["otherBSM"].append(1000039) # Gravitino
+        pdgID["otherBSM_latex"].append("#tilde{G}") # Gravitino
 
     return pdgID
 
