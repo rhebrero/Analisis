@@ -59,6 +59,9 @@ python3 SimpleGenTriggerSim_RPVvsBenchmark.py \
 --color 1 \
 --triggerlabel SIM \
 --outFolder /nfs/cms/escalante/plots/sandbox/ \
+
+# in order to test SimpleGenTriggerSim_RPVvsBenchmark.py over various signal models, one can run a testScript:
+python testSimpleGenTriggerSim_RPVvsBenchmark.py # or with --batch if one wants do it in batch mode
 ```
 
 4. `ValidateMiniAOD.py` this is an example to run on MiniAOD, it is now deprecated.
