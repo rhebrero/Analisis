@@ -28,10 +28,10 @@ import pdb
 # bash utils
 import os
 
-#configuration file
+# configuration file
 import argparse                                    
 
-#Updated Octobre 2023
+# Updated Octobre 2023
 parser = argparse.ArgumentParser(description="Simple gen analyzer, compatible with RPV, Benchmark and Darkphoton, SMUON, STOP")
 parser.add_argument('--inputFile'    , dest='INPUTFILE'    , default=''         , help='input file')
 parser.add_argument('--trigger'      , dest='TRIGGER'      , default=''         , help='input file (with scripts to run on)')
@@ -85,13 +85,14 @@ handleBeamspot  = Handle("reco::BeamSpot")
 labelBeamspot  = ("hltOnlineBeamSpot","", args.TRIGGERLABEL) 
 
 # Getting information of model (HAHM, RPV, BENCHMARK, STAU, STOP)
-motherPdgID = getSignalPdgID(args.model)["mother"]
-longlivedPdgID = getSignalPdgID(args.model)["LLP"]
-otherPdgID = getSignalPdgID(args.model)["otherBSM"]
+motherPdgId = getSignalPdgId(args.model)["mother"]
+longlivedPdgId = getSignalPdgId(args.model)["LLP"]
+otherPdgId = getSignalPdgId(args.model)["otherBSM"]
 
 # 1D Histograms Gen Level
 h_pzProton       = createSimple1DPlot("", "h_pzProton", 150, 6000, 7500., samples)
 h_massHiggs      = createSimple1DPlot("", "h_massHiggs", 200, 100., 1600., samples)
+h_pdgIdHiggs     = createSimple1DPlot("", "h_massHiggs", 30, 0, 30, samples)
 h_massX          = createSimple1DPlot("", "h_massX", 200, 0., 500., samples)
 h_ptX            = createSimple1DPlot("", "h_ptX", 200, 0., 500., samples)
 h_ptOvermassX    = createSimple1DPlot("", "h_ptOvermass", 100, 0., 10., samples)
@@ -248,19 +249,22 @@ for index, ksample in enumerate(sampleName):
                 # set LLP daugthers (all daus) and final state muons (daus) to zero
                 alldaus = []
                 daus = []
-
+                if int(args.verbose) >= 1: print("event ", i)
                 for p in genParticles:
-                    # tellMeMore(p)
+                    if int(args.verbose) >= 1 and p.isHardProcess() == True: 
+                        tellMeMore(p)
+                    
                     if abs(p.pdgId()) == 2212:
                         h_pzProton[index].Fill(abs(p.pz()))
-                    if p.isHardProcess() or abs(p.pdgId()) in longlivedPdgID: #sometimes (e.g RPV, the daughter does not appear as hard process)
+                    if p.isHardProcess() or abs(p.pdgId()) in longlivedPdgId: #sometimes (e.g RPV, the daughter does not appear as hard process)
                         #tellMeMore(p)
 
-                        if abs(p.pdgId()) in motherPdgID: 
+                        if abs(p.pdgId()) in motherPdgId: 
                             # fill information for LLP mother
                             h_massHiggs[index].Fill(p.mass())
+                            h_pdgIdHiggs[index].Fill(p.pdgId())
 
-                        if abs(p.pdgId()) in longlivedPdgID: 
+                        if abs(p.pdgId()) in longlivedPdgId: 
                             alldaus = p.daughterRefVector()                            
                             if isLastCopyOfLLP(alldaus, p) == False:
                                 continue
@@ -503,15 +507,16 @@ for index, ksample in enumerate(sampleName):
     print ("\n")
 
 # getting labels for x and y-axis labels
-motherLatex = getSignalPdgID(args.model)["mother_latex"][0]
-longlivedLatex = getSignalPdgID(args.model)["LLP_latex"][0]
-if len(otherPdgID)>0:
-    otherLatex = getSignalPdgID(args.model)["otherBSM_latex"][0]
+motherLatex = getSignalPdgId(args.model)["mother_latex"][0]
+longlivedLatex = getSignalPdgId(args.model)["LLP_latex"][0]
+if len(otherPdgId)>0:
+    otherLatex = getSignalPdgId(args.model)["otherBSM_latex"][0]
 
 # 1D distributions
 # makeSimple1DPlot(var, canvas, samples, title, xtitle, ytitle, output, folder, logy=False, showOnly = []):
 makeSimple1DPlot(h_pzProton, 'h_pzProton', samples, '', 'p_{Z} proton', 'events', 'h_pzProton', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_massHiggs, 'h_massHiggs', samples, '', 'M({MOTHER})'.format(MOTHER=motherLatex), 'events', 'h_massHiggs', outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_pdgIdHiggs, 'h_pdgIdHiggs', samples, '', 'pdgID({MOTHER})'.format(MOTHER=motherLatex), 'events', 'h_pdgIdHiggs', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_massX, 'h_massX', samples, '', 'M({LLP})'.format(LLP = longlivedLatex), 'events', 'h_massX', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_ptX, 'h_ptX', samples, '', 'p_{T}({LLP})'.format(T="{T}", LLP = longlivedLatex), 'events', 'h_ptX', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_betaX, 'h_betaX', samples, '', '#beta({LLP})'.format(LLP = longlivedLatex), 'events', 'h_betaX', outFolder, logy=False, norm=False)
@@ -547,7 +552,7 @@ makeSimple1DPlot(h_mindzMuons,  'h_mindzMuons',  samples, '', 'min dz [cm]',  'e
 makeSimple1DPlot(h_dRMuons,  'h_dRMuons',  samples, '', '#Delta R', 'events', 'h_dRMuons',  outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_cosalpha, 'h_cosalpha', samples, '', 'cos(#alpha)', 'events', 'h_cosalpha', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_alpha,    'h_alpha',    samples, '', '#alpha', 'events', 'h_alpha',    outFolder, logy=False, norm=False)
-makeSimple1DPlot(h_dphi,     'h_dphi',     samples, '', '$Delta #Phi', 'events', 'h_dphi',     outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_dphi,     'h_dphi',     samples, '', '#Delta #Phi', 'events', 'h_dphi',     outFolder, logy=False, norm=False)
 
 # 2D histograms
 makeSimple2DPlot(h_dxyVsptrel, 'h_dxyVsptrel', samples, 'dxy vs #Delta p_{T}(#mu,{LLP})', '#Delta p_{T}(#mu,{LLP}) [GeV]'.format(T="T", LLP= longlivedLatex), 'dxy[cm]', 'h_dxyVsptrel', outFolder)

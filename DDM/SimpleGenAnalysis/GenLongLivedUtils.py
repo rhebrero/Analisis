@@ -3,7 +3,7 @@ from RecoUtils import *
 from myMathUtils import *
 from ResolutionUtils import *
 
-def getSignalPdgID(model):
+def getSignalPdgId(model):
     """
     List with all PDG IDs for Benchmark, HAHM, RPV, STOP, SMUON.
     """
@@ -39,7 +39,7 @@ def getSignalPdgID(model):
         pdgID["LLP_latex"].append("\chi") # ~chi_10
 
     if model == "SMUON":
-        #to be improved mothers for SMUON
+        #to confirmed that mothers al aways found
         pdgID["mother"].append(1) # d
         pdgID["mother"].append(2) # u
         pdgID["mother"].append(3) # s
@@ -59,6 +59,14 @@ def getSignalPdgID(model):
         pdgID["otherBSM"].append(1000039) # Gravitino
         pdgID["otherBSM_latex"].append("#tilde{G}") # Gravitino
 
+    if model == "STOP":
+        #to be confirmed that mothers are always found
+        pdgID["mother"].append(21) # gluon
+        pdgID["mother_latex"].append("q") 
+
+        pdgID["LLP"].append(1000006) # ~stop_1
+        pdgID["LLP_latex"].append("#tilde{t}") # ~stop1
+
     return pdgID
 
 def getMotherPdgID(p):
@@ -67,7 +75,7 @@ def getMotherPdgID(p):
     return pdgID
     
 def tellMeMore(p):
-    print("pdgID: ", p.pdgId(), "mass:", round(p.mass(), 2), "pt:", round(p.pt(),2), "pz:", round(p.pz(),2), "hardProcess:", p.isHardProcess())
+    print("pdgID: ", p.pdgId(), "mass:", round(p.mass(), 2), "pt:", round(p.pt(),2), "pz:", round(p.pz(),2), "status", p.status(), "hardProcess:", p.isHardProcess())
     ndaughters = len(p.daughterRefVector())
     if p.pdgId() != 21 and p.pdgId() != 2212:
         #skip gluons and protons
