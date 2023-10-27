@@ -134,6 +134,17 @@ def getMothers(prunedParticles, mother1 =-1, mother2=-1):
     else:
         print ("WTF!! \n")
 
+def isLastCopyOfLLP(alldaus, p):
+    '''
+    function that checks if alldaus contains the last copy of p
+    '''
+    lastCopy = True
+    for alldau in alldaus:
+        if alldau.pdgId() == p.pdgId():
+            lastCopy = False
+            break
+    
+    return lastCopy
 
 def getMotherMass(prunedParticles, mother):
     mothers = getMothers(prunedParticles, mother)

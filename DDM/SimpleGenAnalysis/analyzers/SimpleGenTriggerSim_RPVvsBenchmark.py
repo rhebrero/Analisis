@@ -31,9 +31,8 @@ import os
 #configuration file
 import argparse                                    
 
-#Updated Octobre 2022
-parser = argparse.ArgumentParser(description="Simple gen analyzer, compatible with RPV, Benchmark and Darkphoton")
-
+#Updated Octobre 2023
+parser = argparse.ArgumentParser(description="Simple gen analyzer, compatible with RPV, Benchmark and Darkphoton, SMUON, STOP")
 parser.add_argument('--inputFile'    , dest='INPUTFILE'    , default=''         , help='input file')
 parser.add_argument('--trigger'      , dest='TRIGGER'      , default=''         , help='input file (with scripts to run on)')
 parser.add_argument('--label'        , dest='LABEL'        , default=''         , help='suffix for histograms and output folder')
@@ -45,7 +44,6 @@ parser.add_argument('--outFolder'    , dest='OUTFOLDER'    , default=''         
 parser.add_argument('--LHE'          , dest='LHE'          , default=False      , help='run on LHE root file')
 parser.add_argument('--model'        , dest='model'        , default=""         , help='model (BENCHMARK, HAHM, RPV, STOP, SMUON)', required = True)
 parser.add_argument('--verbose'      , dest='verbose'      , default=0          , help='increase verbosity (levels 0, 1, 2)')
-
 args = parser.parse_args()
 
 if (len(args.INPUTFILE) == 0 or len(args.OUTFOLDER) == 0 or len(args.LABEL) == 0):
@@ -65,13 +63,10 @@ else:
 
 print ("will write output in {OUTFOLDERWITHLABEL}".format(OUTFOLDERWITHLABEL=outFolder))
 
-
 # add the sample to process 
 samples = Sample()
 samples.AddSample(args.INPUTFILE    , args.LABEL           , args.LABEL  , int(args.COLOR))
-
-# other samples could be added (to be implemented as argument value, in practice not recommended)
-#samples.AddSample(samplesDir+ signal, 'L1'                                     , '125_20_CTau_130cm_L1'          , 14) # Gray
+# other samples could be added (to be implemented as argument value). In practice this is not recommended as it less efficient for batch production)
 
 # get vectors for samples, legends and histograms
 sampleName = samples.GetSampleName()
@@ -106,6 +101,10 @@ h_genTriggerDiff = createSimple1DPlot("", "h_genTriggerDiff"    , 6, 0., 6., sam
 h_genTrigger     = createSimple1DPlot("", "h_genTrigger"    , 2, 0., 2., samples)
 h_lxy_s          = createSimple1DPlot("", "lxy_s"      , 300,  0., 100., samples)
 h_lxy            = createSimple1DPlot("", "lxy"       , 300,  0., 300., samples)
+h_distance_x     = createSimple1DPlot("", "distance_x" , 300,  0., 300., samples)
+h_distance_y     = createSimple1DPlot("", "distance_y" , 300,  0., 300., samples)
+h_distance_z     = createSimple1DPlot("", "distance_z" , 300,  0., 300., samples)
+h_distance       = createSimple1DPlot("", "distance"   , 300,  0., 300., samples)
 h_dxyMuons       = createSimple1DPlot("", "h_dxyMuons"      , 100,  0.,   50., samples)
 h_dzMuons        = createSimple1DPlot("", "h_dzMuons"       , 100,  0.,  100., samples)
 h_ptMuons        = createSimple1DPlot("", "h_ptMuons"       , 100,  0.,  250., samples)
@@ -166,7 +165,9 @@ if doResolution == True:
 
         h_mindxyrange.append(createSimple1DPlot("h_mindxyrange_"+distance, "h_mindxyrange_"+distance, nbins, 0., float(distance), samples))
         h_lxyrange.append(   createSimple1DPlot("h_lxyrange_"+distance   , "h_lxyrange_"+distance, nbins, 0., float(distance), samples))
-    
+
+# end of definition of the histograms
+
 nevents = int(args.NEVENTS)
 triggerList = args.TRIGGER
 
@@ -244,60 +245,79 @@ for index, ksample in enumerate(sampleName):
                 #print ("Event {EVENT}/{NEVENTS}".format(EVENT=i, NEVENTS=events.size()))
 
             if triggered == True:
+                # set LLP daugthers (all daus) and final state muons (daus) to zero
+                alldaus = []
+                daus = []
+
                 for p in genParticles:
                     # tellMeMore(p)
                     if abs(p.pdgId()) == 2212:
                         h_pzProton[index].Fill(abs(p.pz()))
                     if p.isHardProcess() or abs(p.pdgId()) in longlivedPdgID: #sometimes (e.g RPV, the daughter does not appear as hard process)
-                        tellMeMore(p)
+                        #tellMeMore(p)
 
-                        if abs(p.pdgId()) in motherPdgID: #Plotting something from the Higgs, scalar Phi, or squark, stop, smuon
+                        if abs(p.pdgId()) in motherPdgID: 
+                            # fill information for LLP mother
                             h_massHiggs[index].Fill(p.mass())
-                        if abs(p.pdgId()) in longlivedPdgID: #Plotting something from the X, Zd, or chi_10, smuon, stop
 
-                            alldaus = p.daughterRefVector()
-                            if len(alldaus) == 1 and alldaus[0].pdgId() == p.pdgId(): continue # remove repeated gen particles (only appearing in RPV) 
-
+                        if abs(p.pdgId()) in longlivedPdgID: 
+                            alldaus = p.daughterRefVector()                            
+                            if isLastCopyOfLLP(alldaus, p) == False:
+                                continue
+                        
+                            # fill information for LLP
                             massX = p.mass()
                             h_massX[index].Fill(massX)
                             ptX = p.pt()
                             h_ptX[index].Fill(ptX)
 
-                            if massX >0:
-                                # for smuon, X particle could be massless
-                                h_ptOvermassX[index].Fill(ptX/massX)
-
+                            if massX == 0:
+                                print("ERROR: LLP is massless")
+                                exit()
+                            
+                            # fill kinematics of LLP
+                            h_ptOvermassX[index].Fill(ptX/massX)
                             genBeta = sqrt(p.energy()*p.energy() - p.mass()*p.mass())/p.energy()
                             h_betaX[index].Fill(genBeta) 
-                            #lxy[index].Fill(abs(p.vertex().rho()))
-                            #lzVslxy[index].Fill(abs(p.vertex().Z()), abs(p.vertex().rho()))
-                            ## debug ##
-                            #print(" len(alldaus)", len(alldaus))                            
-                            #print(" p.mother(0).pdgId()", p.mother(0).pdgId())
-                            #print(" p.pdgId()", p.pdgId())
-                            ### loop over daughters for all daughters
-                            #for k, kdau in enumerate(alldaus):
-                            #    print(" alldaus[{INDEX}].pdgId() = {VALUE}".format(INDEX=k, VALUE= alldaus[k].pdgId()))
-                            
-                            daus = getDaughters(alldaus, mother = p.pdgId(), daughther = 13)                            
-                            h_muMulti[index].Fill(len(daus))
-                            ## loop over daughters for all muonic daughters
-                            #for k, kdau in enumerate(daus):
-                            #    print(" daus[{INDEX}].pdgId() = {VALUE}".format(INDEX=k, VALUE= daus[k].pdgId()))
 
+                            # get LLP decay producuts (note that this is model dependent)
+                            if len(daus) == 0:
+                                # daughters of first LLP with pdgID = 13
+                                daus = getDaughters(alldaus, mother = p.pdgId(), daughther = 13)
+                            else:
+                                # daughters of second LLP with pdgID = 13 if the first LLP had decays to pdgID = 13
+                                exdaus = getDaughters(alldaus, mother = p.pdgId(), daughther = 13)
+                                if args.model == "STOP" or args.model == "SMUON":
+                                    # combine muons from two decays
+                                    daus = daus + exdaus
+                                if args.model == "BENCHMARK" or args.model == "RPV":
+                                    # replace muons from the decays (e.g in 4mu samples)
+                                    daus = exdaus
+                            
+                            # Multiplicity for debugging                            
+                            h_muMulti[index].Fill(len(daus))
+                            
+                            # After this point work only with events with at least two dimuons (for SMUON and STOP, they must come from different mother)
+                            if len(daus) < 2: continue
+
+                            # check correct multiplicity
                             if len(daus) != 2:
                                 if len(daus)>0:
                                     print ("+++ LLP (", p.pdgId(),") decay involed", len(daus), "muons +++")
                                     print ("+++ PLEASE CHECK ... +++")
                             else:
-                                #print ("INFO: LLP (", p.pdgId(),") decay involed", len(daus), "muons +++")
                                 if (daus[0].pdgId() == 13 and daus[1].pdgId() == -13) or (daus[0].pdgId() == -13 and daus[1].pdgId() == 13):
                                     fsmuons = findFinalStateMuons(daus)
                                     if len(fsmuons) != 2:
                                         print ("+++ Wrong muon multiplicity +++")
                                         break
 
-                                    #print ("pTs of final state muons:", round(fsmuons[0].pt(),2), round(fsmuons[1].pt(),2))
+                                    # select events with two muons in a given acceptance
+                                    if args.ACCEPTANCE == True:
+                                        if abs(fsmuons[0].vertex().rho()) > 600 or abs(fsmuons[1].vertex().rho()) > 600: continue
+                                        if abs(fsmuons[0].vertex().Z()) > 500 or abs(fsmuons[1].vertex().Z()) > 500: continue
+                                        if abs(fsmuons[0].eta()) > 2.0 or abs(fsmuons[1].eta()) >2.0: continue
+
                                     dimu_px = fsmuons[0].px() + fsmuons[1].px()
                                     dimu_py = fsmuons[0].py() + fsmuons[1].py()
                                     dimu_pz = fsmuons[0].pz() + fsmuons[1].pz()
@@ -305,21 +325,13 @@ for index, ksample in enumerate(sampleName):
                                     dimu_p = sqrt(dimu_px**2 + dimu_py**2 + dimu_pz**2)
                                     dimu_mass = mass(fsmuons[0], fsmuons[1])
 
-                                    #minimum
+                                    # minimum and maximum
                                     min_pt = 999
                                     min_dxy = 999
                                     min_dxygen = 999
                                     min_dz = 999
-
-                                    #maximum
                                     max_pt = 0
                                     max_eta = 0
-
-                                    if args.ACCEPTANCE == True:
-                                        #basic acceptance cuts
-                                        if abs(fsmuons[0].vertex().rho()) > 600: continue
-                                        if abs(fsmuons[0].vertex().Z()) > 500: continue
-                                        if abs(fsmuons[0].eta()) > 2.0 or abs(fsmuons[1].eta()) >2.0: continue
 
                                     for muon in fsmuons:
                                         h_ptMuons[index].Fill(muon.pt())
@@ -334,7 +346,7 @@ for index, ksample in enumerate(sampleName):
                                             ref_x = hltOnlineBeamSpot.x0()  - muon.vx()   
                                             ref_y = hltOnlineBeamSpot.y0()  - muon.vy() 
                                             ref_z =  hltOnlineBeamSpot.z0() - muon.vz()
-                                        else:  #harcoded values only in case beampost information is not available
+                                        else:  #harcoded values only in case beamspot information is not available
                                             ref_x = 0.01075690  - muon.vx()   
                                             ref_y = 0.0417208  - muon.vy() 
                                             ref_z = -0.0316298 - muon.vz()
@@ -369,6 +381,7 @@ for index, ksample in enumerate(sampleName):
                                     h_mindxyMuons[index].Fill(min_dxy)
                                     h_mindzMuons[index].Fill(min_dz)
 
+                                    # check if events would pass a pseudotrigger defined at gen level
                                     genTriggerBit = getGenTrigger(min_pt, max_pt, min_dxy, max_eta, fsmuons[0].vertex().rho(), abs(fsmuons[0].vertex().Z()))
                                     h_genTriggerDiff[index].Fill(genTriggerBit)
                                     if genTriggerBit > 2:
@@ -376,6 +389,7 @@ for index, ksample in enumerate(sampleName):
                                     else:
                                         h_genTrigger[index].Fill(0)
 
+                                    # do a study of the resolution (deprecated?)
                                     if doResolution == True:
                                         for ptIndex, pT in enumerate(bins["pT"]):
                                             if min_pt > float(pT):                                        
@@ -400,6 +414,7 @@ for index, ksample in enumerate(sampleName):
 
                                         for distanceIndex, distance in enumerate(bins["distance"]):
                                             h_mindxyrange[distanceIndex][index].Fill(min_dxy)
+                                    # end of resolution study
 
                                     # delta R between two muons in a pair
                                     dphi = fabs(deltaPhi(fsmuons[0], fsmuons[1]))
@@ -413,17 +428,34 @@ for index, ksample in enumerate(sampleName):
                                     h_cosalpha[index].Fill(cosalpha)
                                     h_alpha[index].Fill(alpha)
 
-                                    if fabs(fsmuons[0].vx() - fsmuons[1].vx()) > 1e-3 or fabs(fsmuons[0].vy() - fsmuons[1].vy()) > 1e-3:
-                                        print ("+++ two daughter muons are not produced at the same vertex +++")
-                                    else:
+                                    # distance between the two muons in x, y, z and total
+                                    distance_x = fabs(fsmuons[0].vx() - fsmuons[1].vx())
+                                    distance_y = fabs(fsmuons[0].vy() - fsmuons[1].vy())
+                                    distance_z = fabs(fsmuons[0].vz() - fsmuons[1].vz())
+                                    distance = sqrt(distance_x*distance_x + distance_y*distance_y + distance_z*distance_z)
+
+                                    h_distance_x[index].Fill(distance_x)
+                                    h_distance_y[index].Fill(distance_y)
+                                    h_distance_z[index].Fill(distance_z)
+                                    h_distance[index].Fill(distance)
+
+                                    if distance_x > 1e-3 or distance_y > 1e-3:
+                                        print ("+++ INFO: two daughter muons are not produced at the same vertex +++")
+
+                                    if distance_x < 1e-3 and distance_y < 1e-3 or args.model == "SMUON" or args.model == "STOP":
+                                        
+                                        # note: for SMUON and STOP models, currently the dphi, dtheta, lxy, lz... are only implemented for first muon (one of the decay)
+
                                         cosdphi = (fsmuons[0].vx()*dimu_px + fsmuons[0].vy()*dimu_py)/fsmuons[0].vertex().rho()/dimu_pt
                                         cosdtheta = (fsmuons[0].vx()*dimu_px + fsmuons[0].vy()*dimu_py + fsmuons[0].vz()*dimu_pz)/sqrt(fsmuons[0].vertex().rho()**2+fsmuons[0].vertex().Z()**2)/dimu_p
-                                        print(cosdphi, cosdtheta)
+                                        #print(cosdphi, cosdtheta)
                                         #print(cosdphi, acos(cosdphi))
-                                        if cosdphi > 1.0 : cosdphi  =  0.9999     #protection against rounding
-                                        if cosdphi < -1.0: cosdphi  = -0.9999     #protection against rounding
-                                        if cosdtheta > 1.0 : cosdtheta  =  0.9999 #protection against rounding
-                                        if cosdtheta < -1.0: cosdtheta  = -0.9999 #protection against rounding
+                                        
+                                        # protection against rounding
+                                        if cosdphi > 1.0 : cosdphi  =  0.9999     
+                                        if cosdphi < -1.0: cosdphi  = -0.9999     
+                                        if cosdtheta > 1.0 : cosdtheta  =  0.9999 
+                                        if cosdtheta < -1.0: cosdtheta  = -0.9999 
                                             
                                         dphi = acos(cosdphi)
                                         dtheta = acos(cosdtheta)
@@ -438,18 +470,16 @@ for index, ksample in enumerate(sampleName):
                                         h_dimumass[index].Fill(dimu_mass)
                                         h_dimumass_l[index].Fill(dimu_mass)
                                         h_dimupt[index].Fill(dimu_pt)
-                                        #################
-                                        # corrected mass#                                        
-                                        #################
+
+                                        # corrected mass (in 2D and 3D)                                       
                                         corr_mass_2d = sqrt(dimu_mass**2+sin(dphi)*sin(dphi)*dimu_pt**2)+dimu_pt*sin(dphi)
                                         corr_mass = sqrt(dimu_mass**2+sin(dtheta)*sin(dtheta)*dimu_p**2)+dimu_p*sin(dtheta)
                                         h_corrdimumass_2d[index].Fill(corr_mass_2d)
                                         h_corrdimumass_2d_l[index].Fill(corr_mass_2d)
                                         h_corrdimumass[index].Fill(corr_mass)
                                         h_corrdimumass_l[index].Fill(corr_mass)
-                                        print(massX, dimu_mass, corr_mass_2d, corr_mass)
                                         
-                                        #################
+                                        # proper time, to recover the lifetime
                                         h_proptime[index].Fill(fsmuons[0].vertex().rho()*10*massX/ptX) #convert lxy from cm to mm
                                         h_proptime_l[index].Fill(fsmuons[0].vertex().rho()*10*massX/ptX) #convert lxy from cm to mm
 
@@ -481,7 +511,7 @@ if len(otherPdgID)>0:
 # 1D distributions
 # makeSimple1DPlot(var, canvas, samples, title, xtitle, ytitle, output, folder, logy=False, showOnly = []):
 makeSimple1DPlot(h_pzProton, 'h_pzProton', samples, '', 'p_{Z} proton', 'events', 'h_pzProton', outFolder, logy=False, norm=False)
-makeSimple1DPlot(h_massHiggs, 'h_massHiggs', samples, '', 'M_{MOTHER}'.format(MOTHER=motherLatex), 'events', 'h_massHiggs', outFolder, logy=False, norm=False)
+makeSimple1DPlot(h_massHiggs, 'h_massHiggs', samples, '', 'M({MOTHER})'.format(MOTHER=motherLatex), 'events', 'h_massHiggs', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_massX, 'h_massX', samples, '', 'M({LLP})'.format(LLP = longlivedLatex), 'events', 'h_massX', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_ptX, 'h_ptX', samples, '', 'p_{T}({LLP})'.format(T="{T}", LLP = longlivedLatex), 'events', 'h_ptX', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_betaX, 'h_betaX', samples, '', '#beta({LLP})'.format(LLP = longlivedLatex), 'events', 'h_betaX', outFolder, logy=False, norm=False)
@@ -491,7 +521,10 @@ makeSimple1DPlot(h_genTriggerDiff, 'h_genTriggerDiff', samples, '', 'gen level t
 makeSimple1DPlot(h_genTrigger, 'h_genTrigger', samples, '', 'gen level trigger', 'events', 'h_genTrigger', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_lxy_s, 'h_lxy_s', samples, '', 'L_{xy}[cm]', 'events', 'h_lxy_s', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_lxy, 'h_lxy', samples, '', 'L_{xy}[cm]', 'events', 'h_lxy', outFolder, logy=True, norm=False)
-makeSimple2DPlot(h_lxyVslz, 'h_lxyVslz', samples, 'Generated L_{xy}[cm] vs L_{z}[cm]', 'L_{z}[cm]', 'L_{xy}[cm]', 'h_LxyVsLz', outFolder)
+makeSimple1DPlot(h_distance_x, 'h_distance_x', samples, '', '|#mu_{1}.vx - #mu_{2}.vx| [cm]', 'events', 'h_distance_x', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_distance_y, 'h_distance_y', samples, '', '|#mu_{1}.vy - #mu_{2}.vy| [cm]', 'events', 'h_distance_y', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_distance_z, 'h_distance_z', samples, '', '|#mu_{1}.vz - #mu_{2}.vz| [cm]', 'events', 'h_distance_z', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_distance, 'h_distance', samples, '', '|#mu_{1}- #mu_{2}| [cm]', 'events', 'h_distance', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_etaMuons, 'h_etaMuons', samples, '', '#eta', 'events', 'h_etaMuons', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_ptMuons, 'h_ptMuons', samples, '', 'p_{T} [GeV]', 'events', 'h_ptMuons', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_dxyMuons, 'h_dxyMuons', samples, '', 'dxy [cm]', 'events', 'h_dxyMuons', outFolder, logy=True, norm=False)
@@ -518,6 +551,7 @@ makeSimple1DPlot(h_dphi,     'h_dphi',     samples, '', '$Delta #Phi', 'events',
 
 # 2D histograms
 makeSimple2DPlot(h_dxyVsptrel, 'h_dxyVsptrel', samples, 'dxy vs #Delta p_{T}(#mu,{LLP})', '#Delta p_{T}(#mu,{LLP}) [GeV]'.format(T="T", LLP= longlivedLatex), 'dxy[cm]', 'h_dxyVsptrel', outFolder)
+makeSimple2DPlot(h_lxyVslz, 'h_lxyVslz', samples, 'Generated L_{xy}[cm] vs L_{z}[cm]', 'L_{z}[cm]', 'L_{xy}[cm]', 'h_LxyVsLz', outFolder)
 
 # 1D Histograms Gen Level, differential plots.
 if doResolution == True:
@@ -533,4 +567,3 @@ if doResolution == True:
 
     for index, threshold in enumerate(bins["threshold"]):
         makeSimple1DPlot(h_ptVsdxy[index]   , "h_ptVsdxy_"+threshold   , samples, '', 'pT [GeV]', '', "h_ptVsdxy_"+threshold    , outFolder, logy=True, norm=False)
-
