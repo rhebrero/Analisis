@@ -42,7 +42,7 @@ parser.add_argument('--nevents'      , dest='NEVENTS'      , default=-1         
 parser.add_argument('--acceptance'   , dest='ACCEPTANCE'   , default=False      , help='apply basic acceptance cuts')
 parser.add_argument('--outFolder'    , dest='OUTFOLDER'    , default=''         , help='output folder')
 parser.add_argument('--LHE'          , dest='LHE'          , default=False      , help='run on LHE root file')
-parser.add_argument('--model'        , dest='model'        , default=""         , help='model (BENCHMARK, HAHM, RPV, STOP, SMUON)', required = True)
+parser.add_argument('--model'        , dest='MODEL'        , default=""         , help='model (BENCHMARK, HAHM, RPV, STOP, SMUON)', required = True)
 parser.add_argument('--verbose'      , dest='verbose'      , default=0          , help='increase verbosity (levels 0, 1, 2)')
 args = parser.parse_args()
 
@@ -85,9 +85,9 @@ handleBeamspot  = Handle("reco::BeamSpot")
 labelBeamspot  = ("hltOnlineBeamSpot","", args.TRIGGERLABEL) 
 
 # Getting information of model (HAHM, RPV, BENCHMARK, STAU, STOP)
-motherPdgId = getSignalPdgId(args.model)["mother"]
-longlivedPdgId = getSignalPdgId(args.model)["LLP"]
-otherPdgId = getSignalPdgId(args.model)["otherBSM"]
+motherPdgId = getSignalPdgId(args.MODEL)["mother"]
+longlivedPdgId = getSignalPdgId(args.MODEL)["LLP"]
+otherPdgId = getSignalPdgId(args.MODEL)["otherBSM"]
 
 # 1D Histograms Gen Level
 h_pzProton       = createSimple1DPlot("", "h_pzProton", 150, 6000, 7500., samples)
@@ -102,10 +102,12 @@ h_genTriggerDiff = createSimple1DPlot("", "h_genTriggerDiff"    , 6, 0., 6., sam
 h_genTrigger     = createSimple1DPlot("", "h_genTrigger"    , 2, 0., 2., samples)
 h_lxy_s          = createSimple1DPlot("", "lxy_s"      , 300,  0., 100., samples)
 h_lxy            = createSimple1DPlot("", "lxy"       , 300,  0., 300., samples)
+h_lxy_l          = createSimple1DPlot("", "lxy_l"       , 500,  0., 1000., samples)
 h_distance_x     = createSimple1DPlot("", "distance_x" , 300,  0., 300., samples)
 h_distance_y     = createSimple1DPlot("", "distance_y" , 300,  0., 300., samples)
 h_distance_z     = createSimple1DPlot("", "distance_z" , 300,  0., 300., samples)
 h_distance       = createSimple1DPlot("", "distance"   , 300,  0., 300., samples)
+h_distance_l     = createSimple1DPlot("", "distance_l"   , 500,  0., 1000., samples)
 h_dxyMuons       = createSimple1DPlot("", "h_dxyMuons"      , 100,  0.,   50., samples)
 h_dzMuons        = createSimple1DPlot("", "h_dzMuons"       , 100,  0.,  100., samples)
 h_ptMuons        = createSimple1DPlot("", "h_ptMuons"       , 100,  0.,  250., samples)
@@ -291,10 +293,10 @@ for index, ksample in enumerate(sampleName):
                             else:
                                 # daughters of second LLP with pdgID = 13 if the first LLP had decays to pdgID = 13
                                 exdaus = getDaughters(alldaus, mother = p.pdgId(), daughther = 13)
-                                if args.model == "STOP" or args.model == "SMUON":
+                                if args.MODEL == "STOP" or args.MODEL == "SMUON":
                                     # combine muons from two decays
                                     daus = daus + exdaus
-                                if args.model == "BENCHMARK" or args.model == "RPV":
+                                if args.MODEL == "BENCHMARK" or args.MODEL == "RPV":
                                     # replace muons from the decays (e.g in 4mu samples)
                                     daus = exdaus
                             
@@ -442,11 +444,15 @@ for index, ksample in enumerate(sampleName):
                                     h_distance_y[index].Fill(distance_y)
                                     h_distance_z[index].Fill(distance_z)
                                     h_distance[index].Fill(distance)
+                                    h_distance_l[index].Fill(distance)
 
                                     if distance_x > 1e-3 or distance_y > 1e-3:
-                                        print ("+++ INFO: two daughter muons are not produced at the same vertex +++")
+                                        if count_events < 10 and args.MODEL in ["SMUON", "STOP"]:
+                                            print ("+++ INFO: two daughter muons are not produced at the same vertex (EXPECTED, SMUON) +++")
+                                        elif args.MODEL in ["BENCHMARK", "HAHM, RPV", "STOP"]:
+                                            print ("+++ INFO: two daughter muons are not produced at the same vertex (PLEASE CHECK) +++")
 
-                                    if distance_x < 1e-3 and distance_y < 1e-3 or args.model == "SMUON" or args.model == "STOP":
+                                    if distance_x < 1e-3 and distance_y < 1e-3 or args.MODEL == "SMUON" or args.MODEL == "STOP":
                                         
                                         # note: for SMUON and STOP models, currently the dphi, dtheta, lxy, lz... are only implemented for first muon (one of the decay)
 
@@ -467,6 +473,7 @@ for index, ksample in enumerate(sampleName):
                                         #print ("dimu_pt =", dimu_pt, "cos(dphi) =", cosdphi, "dphi =", dphi)
                                         h_lxy_s[index].Fill(fsmuons[0].vertex().rho())
                                         h_lxy[index].Fill(fsmuons[0].vertex().rho())
+                                        h_lxy_l[index].Fill(fsmuons[0].vertex().rho())
                                         h_lxyVslz[index].Fill(fabs(fsmuons[0].vertex().Z()), fsmuons[0].vertex().rho())
                                         h_dphi[index].Fill(dphi)
 
@@ -507,10 +514,10 @@ for index, ksample in enumerate(sampleName):
     print ("\n")
 
 # getting labels for x and y-axis labels
-motherLatex = getSignalPdgId(args.model)["mother_latex"][0]
-longlivedLatex = getSignalPdgId(args.model)["LLP_latex"][0]
+motherLatex = getSignalPdgId(args.MODEL)["mother_latex"][0]
+longlivedLatex = getSignalPdgId(args.MODEL)["LLP_latex"][0]
 if len(otherPdgId)>0:
-    otherLatex = getSignalPdgId(args.model)["otherBSM_latex"][0]
+    otherLatex = getSignalPdgId(args.MODEL)["otherBSM_latex"][0]
 
 # 1D distributions
 # makeSimple1DPlot(var, canvas, samples, title, xtitle, ytitle, output, folder, logy=False, showOnly = []):
@@ -526,10 +533,12 @@ makeSimple1DPlot(h_genTriggerDiff, 'h_genTriggerDiff', samples, '', 'gen level t
 makeSimple1DPlot(h_genTrigger, 'h_genTrigger', samples, '', 'gen level trigger', 'events', 'h_genTrigger', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_lxy_s, 'h_lxy_s', samples, '', 'L_{xy}[cm]', 'events', 'h_lxy_s', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_lxy, 'h_lxy', samples, '', 'L_{xy}[cm]', 'events', 'h_lxy', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_lxy_l, 'h_lxy_l', samples, '', 'L_{xy}[cm]', 'events', 'h_lxy_l', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_distance_x, 'h_distance_x', samples, '', '|#mu_{1}.vx - #mu_{2}.vx| [cm]', 'events', 'h_distance_x', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_distance_y, 'h_distance_y', samples, '', '|#mu_{1}.vy - #mu_{2}.vy| [cm]', 'events', 'h_distance_y', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_distance_z, 'h_distance_z', samples, '', '|#mu_{1}.vz - #mu_{2}.vz| [cm]', 'events', 'h_distance_z', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_distance, 'h_distance', samples, '', '|#mu_{1}- #mu_{2}| [cm]', 'events', 'h_distance', outFolder, logy=True, norm=False)
+makeSimple1DPlot(h_distance_l, 'h_distance_l', samples, '', '|#mu_{1}- #mu_{2}| [cm]', 'events', 'h_distance_l', outFolder, logy=True, norm=False)
 makeSimple1DPlot(h_etaMuons, 'h_etaMuons', samples, '', '#eta', 'events', 'h_etaMuons', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_ptMuons, 'h_ptMuons', samples, '', 'p_{T} [GeV]', 'events', 'h_ptMuons', outFolder, logy=False, norm=False)
 makeSimple1DPlot(h_dxyMuons, 'h_dxyMuons', samples, '', 'dxy [cm]', 'events', 'h_dxyMuons', outFolder, logy=True, norm=False)

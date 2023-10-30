@@ -1,7 +1,10 @@
 import os
 import argparse
-from utils.SimpleTools import getSuffix
-from utils.SamplesDatabase import samples_Benchmark, samples_HAHM, samples_RPV, samples_2022
+import socket
+
+from utils import getLibraries
+from SimpleTools import getSuffix
+from SamplesDatabase import samples_Benchmark, samples_HAHM, samples_RPV, samples_SMUON, samples_2022
 
 parser = argparse.ArgumentParser(description="creates submission scripts.")
 
@@ -24,6 +27,10 @@ parser.add_argument('--massX'     , dest='MASS_X'   , default=-1              , 
 parser.add_argument('--hahm'      , dest='HAHM'    , action='store_true'      , default=False, help = 'run on HAHM')
 parser.add_argument('--massZd'    , dest='MASS_ZD' , default=-1               , help = 'Dark photon mass')
 
+#SMuon
+parser.add_argument('--smuon'     , dest='SMUON'    , action='store_true'      , default=False, help = 'run on SMUON')
+parser.add_argument('--massSmuon' , dest='MASS_SMUON'  , default=-1            , help = 'Smuon Mass')
+
 #lifetimes
 parser.add_argument('--lifetime'  , dest='LIFETIME' , default=-1               , help = 'lifetime point. Valid arguments: 0, 1, 2, and 3 (only for dark photon)')
 
@@ -33,18 +40,27 @@ parser.add_argument('--era'       , dest='ERA' , default=-1                     
 
 options = parser.parse_args()
 
-f = open(options.JOBSNAMES, "w")
 scriptName = options.SCRIPTNAME
 
 def configureHistograms(grid, ctau):
+    '''
+    configures the input file and label for the histograms
+    '''
 
-    eosFolder = "/eos/vbc/experiments/cms/store/user/escalant/"
-
+    if "vbc.at" in socket.gethostname():
+        eosFolder = "/eos/vbc/experiments/cms/store/user/escalant/"
+    elif "ciemat.es" in socket.gethostname():
+        eosFolder = "/pnfs/ciemat.es/data/cms/store/user/escalant/"
+    else:
+        print("ERROR: eosFolder not configured")
+        exit()
+        
     #deafult samples
-    if options.HAHM == True:          version = "GS-hahm_16_11"
-    if options.RPV == True:           version = "GS-27_11"
-    #if options.RPV == True:           version = "GS-24_11" #older production
-    if options.BENCHMARK == True:     version = "GS-November2022_500"
+    if options.HAHM == True:          version = "GS-hahm_16_11"       # at CLIP
+    if options.RPV == True:           version = "GS-27_11"            # at CLIP
+    if options.BENCHMARK == True:     version = "GS-November2022_500" # at CLIP
+    if options.SMUON == True:         version = "GS-October2023_ToDelete" # at CIEMAT
+
     if options.DATA == True:
         eosFolder = "/eos/vbc/experiments/cms/store/user/sonawane/"
         if grid["era"] == "MuonRun2022F":  version = "PromptReco-v1_012023-v01"
@@ -74,6 +90,13 @@ def configureHistograms(grid, ctau):
         inputFile = inputFileTemplate.format(EOS_FOLDER = eosFolder, MASS_ZD = grid['massZd'], CTAU = ctau, VERSION = version)
         label = labelTemplate.format(MASS_ZD = grid['massZd'], CTAU = ctau)
 
+    if options.SMUON == True:
+        inputFileTemplate = "{EOS_FOLDER}/SMuonToMuGravitino-M_{MASS_SMUON}_ctau_{CTAU}mm_TuneCP5_13p6TeV_pythia8/crab_SMuonToMuGravitino-M_{MASS_SMUON}_ctau_{CTAU}mm_TuneCP5_13p6TeV_pythia8_{VERSION}/"
+        labelTemplate = "MSMuon_{MASS_SMUON}_ctau-{CTAU}"
+        
+        inputFile = inputFileTemplate.format(EOS_FOLDER = eosFolder, MASS_SMUON = grid['massSMuon'], CTAU = ctau, VERSION = version)
+        label = labelTemplate.format(MASS_SMUON = grid['massSMuon'], CTAU = ctau)
+
     if options.DATA == True:
         inputFileTemplate = "{EOS_FOLDER}Muon/PATFilter_{ERA}-{VERSION}/"
         labelTemplate = "{ERA}"
@@ -81,8 +104,8 @@ def configureHistograms(grid, ctau):
         inputFile = inputFileTemplate.format(EOS_FOLDER = eosFolder, ERA = grid['era'], VERSION = version)
         label = labelTemplate.format(ERA = grid['era'])
 
-    if len(inputFile)* len(label) == 0:
-        print("ERROR: Histograms not configured")
+    if len(inputFile)*len(label) == 0:
+        print("ERROR: Histograms have not been configured correctly")
         exit()
         
     return inputFile, label 
@@ -91,12 +114,26 @@ def appendScript(jobs, grid, ctau = []):
     '''
     appends a job defined in command variable to a dictionary
     '''
-
     inputFile, label = configureHistograms(grid, ctau)
     inputFile = inputFile + getSuffix(inputFile)
     outFolder = "/users/alberto.escalante/plots/plots_{SCRIPTNAME}/".format(SCRIPTNAME = options.SCRIPTNAME.replace(".py", ""))
+    
+    if "vbc.at" in socket.gethostname():
+        outFolder = "/users/alberto.escalante/plots/plots_{SCRIPTNAME}/".format(SCRIPTNAME = options.SCRIPTNAME.replace(".py", ""))
+    elif "ciemat.es" in socket.gethostname():
+        outFolder = "/nfs/cms/escalante/plots/plots_{SCRIPTNAME}/".format(SCRIPTNAME = options.SCRIPTNAME.replace(".py", ""))
+    else:
+        print("ERROR: outFolder not configured")
+        exit()
 
-    command = "python3 {SCRIPTNAME} --inputFile {INPUTFILETEMPLATE} --trigger all --label {LABELTEMPLATE} --color 1 --triggerlabel SIM --outFolder {OUTFOLDER} --nevents {NEVENTS} \n".format(SCRIPTNAME = options.SCRIPTNAME, INPUTFILETEMPLATE = inputFile, LABELTEMPLATE = label, OUTFOLDER = outFolder, NEVENTS = options.NEVENTS)
+    # it could be implemented more nicely
+    model = ""
+    if options.RPV: model = "RPV"
+    if options.HAHM: model = "HAHM"
+    if options.BENCHMARK: model = "BENCHMARK"
+    if options.SMUON: model = "SMUON"
+
+    command = "python3 {SCRIPTNAME} --inputFile {INPUTFILETEMPLATE} --model {MODEL} --trigger all --label {LABELTEMPLATE} --color 1 --triggerlabel SIM --outFolder {OUTFOLDER} --nevents {NEVENTS} \n".format(SCRIPTNAME = options.SCRIPTNAME, INPUTFILETEMPLATE = inputFile, MODEL = model, LABELTEMPLATE = label, OUTFOLDER = outFolder, NEVENTS = options.NEVENTS)
     command.format(OUTFOLDER = outFolder)
     
     if len(command) > 0:
@@ -148,23 +185,32 @@ if options.HAHM == True:
             if options.LIFETIME != kLifetime: continue #select specific lifetime
             appendScript(jobs, grid, ctau = kLifetime)
 
+if options.SMUON == True:
+    for kSample in samples_SMUON:
+        grid['massSMuon'] = kSample["massSMuon"]
+        grid['ctauSMuon'] = kSample["ctauSMuon"]
+        print(grid['ctauSMuon'], grid['massSMuon'])
+        if int(options.MASS_SMUON) > 0 and int(options.MASS_SMUON) != int(grid['massSMuon']): continue #select specific SMUON mass
+
+        for index, kLifetime in enumerate(grid['ctauSMuon']):
+            if options.LIFETIME != kLifetime and options.LIFETIME > 0: continue #select specific lifetime
+            print(jobs, grid, kLifetime)
+            appendScript(jobs, grid, ctau = kLifetime)
+
 if options.DATA == True:
     for kSample in samples_2022:
         grid['era'] = kSample["era"]
         appendScript(jobs, grid)
 
+# write all tasks saved in vector jobs in an a text file that can be submitted to the grid
 if len(jobs) == 0:
-    print("please specify a model type --rpv, --hahm, --Benchmark, --data")
+    print("please specify a model type --rpv, --hahm, --Benchmark, --smuon, --data")
     exit()
-    
-for kjob in jobs:
-    print(kjob)
-    f.write(kjob)
+else:
+    f = open(options.JOBSNAMES, "w")
+    for kjob in jobs:
+        print(kjob)
+        f.write(kjob)
+    print("jobs.sh written, happy submission")
+    f.close()
 
-print("jobs.sh written, happy submission")
-f.close()
-
-## to be ported... if needed...
-
-## triggered (needs GEN SIM sample)
-#python3 SimpleGenTriggerSim_RPVvsBenchmark.py --inputFile /eos/vbc/experiments/cms/store/user/escalant/SquarkToNeutralinoTo2LNu-MSquark_350_MChi_148_ctau_100mm_TuneCP5_13p6TeV_pythia8/crab_SquarkToNeutralinoTo2LNu-MSquark_350_MChi_148_ctau_100mm_TuneCP5_13p6TeV_pythia8_GS-November2022_500/221030_190707/0000/ --process RPV --trigger HLT_DoubleL2Mu23NoVtx_2Cha_v3,HLT_DoubleL2Mu23NoVtx_2Cha_CosmicSeed_v3,HLT_DoubleL3Mu10NoVtx_Displaced_v1,HLT_DoubleL3Mu10NoVtx_CosmicSeed_Displaced_v1,HLT_DoubleL2Mu10NoVtx_2Cha_PromptL3Mu0Veto_Iter3_v1,HLT_DoubleL2Mu10NoVtx_2Cha_CosmicSeed_PromptL3Mu0Veto_v1 --label MSquark_350_MChi_148_ctau_100mm --color 1 --triggerlabel SIM --outFolder /users/alberto.escalante/private/Github/work/DDM/SimpleGenAnalysis/analyzers/plots_SimpleGenTriggerSim_RPVvsBenchmark/trigger/ --nevents -1

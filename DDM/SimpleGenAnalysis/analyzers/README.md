@@ -29,8 +29,7 @@ python3 runSimpleGenTriggerSim.py --trigger HLT_DoubleL3Mu10NoVtx_Displaced_v1,H
 python3 runSimpleGenTriggerSim.py --trigger HLT_DoubleL2Mu23NoVtx_2Cha_v3,HLT_DoubleL2Mu23NoVtx_2Cha_CosmicSeed_v3,HLT_DoubleL3Mu10NoVtx_Displaced_v1,HLT_DoubleL3Mu10NoVtx_CosmicSeed_Displaced_v1,HLT_DoubleL2Mu10NoVtx_2Cha_PromptL3Mu0Veto_Iter3_v1,HLT_DoubleL2Mu10NoVtx_2Cha_CosmicSeed_PromptL3Mu0Veto_v1 --label HLT --color 28    
 ```
 
-3.  `SimpleGenTriggerSim_RPVvsBenchmark.py` is a more complex analyzer that also supports RPV SUSY samples. It is configured via `runSimpleGenTriggerSim_RPVvsBenchmark_eos.py` and it was tested with files
-store in `T2_AT_Vienna`.
+3.  `SimpleGenTriggerSim_RPVvsBenchmark.py` is a more complex analyzer that also supports RPV SUSY samples. It is configured via `runSimpleGenTriggerSim_RPVvsBenchmark_eos.py` and it was tested with files store in `T2_AT_Vienna` and `T2_ES_CIEMAT`
 
 ```bash
 # Example of running on single file stored in pnfs

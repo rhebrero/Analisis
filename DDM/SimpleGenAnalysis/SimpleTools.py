@@ -112,7 +112,11 @@ def makeSimple1DPlot(var, canvas, samples, title, xtitle, ytitle, output, folder
     ROOT.gStyle.SetOptStat(0)
 
     nsamples = len(var)
-    leg = ROOT.TLegend(0.55,0.9 - nsamples*0.1,.90,.90)
+    legend_size = 0.55
+    legend_size_first_entry = 0.85 - 0.02 * len(samples.GetLegendName()[0])
+    if legend_size_first_entry < legend_size: legend_size = legend_size_first_entry #make legend larger if the text is too long
+    
+    leg = ROOT.TLegend(legend_size, 0.9 - nsamples*0.1, .90, .90)
     leg.SetTextSize(0.042)
     leg.SetFillColor(0)
 
@@ -517,6 +521,7 @@ def makeSimple1DPlotFromDic(plot, inputs, folder, resize_legend=[]):
         
     leg.SetFillColor(0)
     leg.SetBorderSize(0)
+    leg.SetTextSize(0.042)
 
     RootFile = []
     hist = []
