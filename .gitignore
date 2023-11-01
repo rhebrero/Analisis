@@ -16,3 +16,4 @@ DDM/SimpleGenAnalysis/analyzers/plots_*/
 *.py~
 .gitignore~
 logs
+*pyc
