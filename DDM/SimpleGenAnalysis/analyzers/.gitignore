@@ -1,1 +1,5 @@
 utils/*pyc
+logs/*
+condorExecutable.sh
+condorSubmit
+jobs.sh
