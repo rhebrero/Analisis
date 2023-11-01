@@ -3,3 +3,4 @@ logs/*
 condorExecutable.sh
 condorSubmit
 jobs.sh
+test.sh

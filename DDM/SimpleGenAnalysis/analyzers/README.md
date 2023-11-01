@@ -60,7 +60,16 @@ python3 SimpleGenTriggerSim_RPVvsBenchmark.py \
 --outFolder /nfs/cms/escalante/plots/sandbox/ \
 
 # in order to test SimpleGenTriggerSim_RPVvsBenchmark.py over various signal models, one can run a testScript:
-python testSimpleGenTriggerSim_RPVvsBenchmark.py # or with --batch if one wants do it in batch mode
+python testSimpleGenTriggerSim_RPVvsBenchmark.py #if one wants to run locally
+python testSimpleGenTriggerSim_RPVvsBenchmark.py --batch #if one wants do it in batch mode
+
+# to submit to batch, one creates a submission script:
+python3 runSimpleGenTriggerSim_RPVvsBenchmark_eos.py --smuon
+
+# to submit to batch, one can use the submit script:
+python python lxplusCondorSubmit.py --inputFile jobs.sh --ciemat --pnfs # the arguments are optional, but needed to run at CIEMAT (and read from pnfs)
+python python lxplusCondorSubmit.py --inputFile test.sh --ciemat --pnfs # the arguments are optional, but needed to run at CIEMAT (and read from pnfs)
+
 ```
 
 4. `ValidateMiniAOD.py` this is an example to run on MiniAOD, it is now deprecated.
