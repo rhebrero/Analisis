@@ -67,8 +67,8 @@ python testSimpleGenTriggerSim_RPVvsBenchmark.py --batch #if one wants do it in 
 python3 runSimpleGenTriggerSim_RPVvsBenchmark_eos.py --smuon
 
 # to submit to batch, one can use the submit script:
-python python lxplusCondorSubmit.py --inputFile jobs.sh --ciemat --pnfs # the arguments are optional, but needed to run at CIEMAT (and read from pnfs)
-python python lxplusCondorSubmit.py --inputFile test.sh --ciemat --pnfs # the arguments are optional, but needed to run at CIEMAT (and read from pnfs)
+python lxplusCondorSubmit.py --inputFile jobs.sh --ciemat --pnfs # the arguments are optional, but needed to run at CIEMAT (and read from pnfs)
+python lxplusCondorSubmit.py --inputFile test.sh --ciemat --pnfs # the arguments are optional, but needed to run at CIEMAT (and read from pnfs)
 
 ```
 
