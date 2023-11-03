@@ -72,8 +72,7 @@ def makePlots(plots, inputs, studyName, outputFolder):
         makeSimple1DPlotFromDic(plot = plot, inputs = inputs, folder = outputFolder)
 
 from studies import studies_SMUON, do_studies_SMUON
-# input and outputs - CIEMAT
-inputFolder = "/nfs/cms/escalante/plots/plots_SimpleGenTriggerSim_RPVvsBenchmark/"
+# outputs - CIEMAT
 outputFolder = "/nfs/cms/escalante/plots/plots_SimpleGenTriggerSim_RPVvsBenchmark/{STUDYNAME}/"
 
 # input and outputs - HEPHY

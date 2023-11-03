@@ -15,7 +15,6 @@ studies_SMUON["Overview"] = addInput(studies_SMUON["Overview"], inputFolder + "M
 studies_SMUON["Overview"] = addInput(studies_SMUON["Overview"], inputFolder + "MSMuon_200_ctau-6000/", "MSMuon_200_ctau-6000", "#tilde{l}(200)  600 cm", 4)
 studies_SMUON["Overview"] = addInput(studies_SMUON["Overview"], inputFolder + "MSMuon_400_ctau-2000/", "MSMuon_400_ctau-2000", "#tilde{l}(400), 200 cm", 2)
 studies_SMUON["Overview"] = addInput(studies_SMUON["Overview"], inputFolder + "MSMuon_700_ctau-700/", "MSMuon_700_ctau-700", "#tilde{l}(700), 70 cm", 1)
-studies_SMUON["Overview"] = addInput(studies_SMUON["Overview"], inputFolder + "MSMuon_400_ctau-2000/", "MSMuon_400_ctau-2000", "#tilde{l}(400), 200 cm", 2)
 
 studies_SMUON["Overview_simple"] = []
 studies_SMUON["Overview_simple"] = addInput(studies_SMUON["Overview_simple"], inputFolder + "MSMuon_100_ctau-8000/", "MSMuon_100_ctau-8000", "#tilde{l}(100)  800 cm", 8)
