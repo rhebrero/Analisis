@@ -122,8 +122,7 @@ def GetTriggerId(triggerlist, HLTTriggerNames):
         for i in range(HLTTriggerNames.size()):
             if ktriggerlist == HLTTriggerNames.triggerName(i):
                 triggerIdlist.append(i)
-                break #nuevo, para mas eficiencia, probar
-    
+                break
     return triggerIdlist
 
 
@@ -163,19 +162,47 @@ for index, ksamples in enumerate(sampleName): #recorre los batch del sampleName
         TriggerIdlist_S2 = GetTriggerId(Triggerlist_S2, HLTTriggerNames)
         TriggerIdlist_S3 = GetTriggerId(Triggerlist_S3, HLTTriggerNames)
 
-        #cambiarlo para que no se meta en el bucle a no ser que se haya activado algun trigger
-        for p in genParticles:
-            # quito los pdgId = +-15 y voy a quitar también el que vengan de staus
-            if (p.pdgId() == 13) and (abs(p.mother().pdgId()) == 1000013 or abs(p.mother().pdgId()) == 2000013): 
+        triggered1 = False
+        triggered2 = False
+        triggered3 = False    
 
-                dxy_p = abs((p.py()*p.vertex().x()-p.px()*p.vertex().y())/p.pt())
-                lxy_p = abs(p.vertex().rho())
-            
-            if (p.pdgId() == -13) and (abs(p.mother().pdgId()) == 1000013 or abs(p.mother().pdgId()) == 2000013): 
+        if CheckTrigger(TriggerIdlist_S1, triggerBits): 
+            N_trigger_S1 += 1
+            triggered1 = True
 
-                dxy_n = abs((p.py()*p.vertex().x()-p.px()*p.vertex().y())/p.pt()) 
-                lxy_n = abs(p.vertex().rho())
+        if CheckTrigger(TriggerIdlist_S2, triggerBits): 
+            N_trigger_S2 += 1
+            triggered2 = True
         
+        if CheckTrigger(TriggerIdlist_S3, triggerBits): 
+            N_trigger_S3 += 1
+            triggered3 = True
+
+
+        #cambiarlo para que no se meta en el bucle a no ser que se haya activado algun trigger
+        if triggered1 == True or triggered2 == True or triggered3 == True:
+            for p in genParticles:
+                # quito los pdgId = +-15 y voy a quitar también el que vengan de staus
+                if (p.pdgId() == 13) and (abs(p.mother().pdgId()) == 1000013 or abs(p.mother().pdgId()) == 2000013): 
+
+                    dxy_p = abs((p.py()*p.vertex().x()-p.px()*p.vertex().y())/p.pt())
+                    lxy_p = abs(p.vertex().rho())
+                
+                if (p.pdgId() == -13) and (abs(p.mother().pdgId()) == 1000013 or abs(p.mother().pdgId()) == 2000013): 
+
+                    dxy_n = abs((p.py()*p.vertex().x()-p.px()*p.vertex().y())/p.pt()) 
+                    lxy_n = abs(p.vertex().rho())
+
+            if triggered1 == True and max(dxy_n, dxy_p) < 10 and min(dxy_n, dxy_p) > 0.1:
+                dxy[index].Fill(max(dxy_n, dxy_p))
+            
+            if triggered2 == True and max(lxy_p, lxy_n) < 400 and min(lxy_n, lxy_p) > 0.1 and min(dxy_n, dxy_p) > 0.1:
+                lxy_menor[index].Fill(max(lxy_p, lxy_n))
+
+            if triggered3 == True and min(lxy_n, lxy_p) > 400:
+                lxy_mayor[index].Fill(min(lxy_n, lxy_p))
+
+
         # pdb.set_trace()
 
         if dxy_p * dxy_n < 0 or lxy_p * lxy_n <0:
@@ -183,26 +210,6 @@ for index, ksamples in enumerate(sampleName): #recorre los batch del sampleName
             pdb.set_trace()
 
 
-        if CheckTrigger(TriggerIdlist_S1, triggerBits): 
-            N_trigger_S1 += 1
-            
-            if max(dxy_n, dxy_p) < 10 and min(dxy_n, dxy_p) > 0.1: #en el paper creo que lo hacian con dxy>0.01cm
-
-                dxy[index].Fill(max(dxy_n, dxy_p))
-
-        if CheckTrigger(TriggerIdlist_S2, triggerBits): 
-            N_trigger_S2 += 1
-            
-            if max(lxy_p, lxy_n) < 400 and min(lxy_n, lxy_p) > 0.1 and min(dxy_n, dxy_p) > 0.1: #and min(lxy_n, lxy_p) > 0.1 se lo añado nuevo que lo acabo de ver en las diapositivas que me mando
-                
-                lxy_menor[index].Fill(max(lxy_p, lxy_n))
-        
-        if CheckTrigger(TriggerIdlist_S3, triggerBits): 
-            N_trigger_S3 += 1
-
-            if min(lxy_n, lxy_p) > 400:
-                
-                lxy_mayor[index].Fill(min(lxy_n, lxy_p)) 
 
         
     N_dxy.append(dxy[index].Integral())
@@ -229,7 +236,6 @@ total_time = end_time - start_time
 
 # pdb.set_trace()
 
-# seria conveniente guardar los datos en un TTree si voy a hacer luego otras cosas con ellos?
 with open('eficiencias_necesarias_{MASS}GeV_con_trigger.txt'.format(MASS = args.MASS), 'w') as text:
 
     text.write("{:<20} {:<30} {:<30} {:<30} {:<30} {:<25} {:<25} {:<25} {:<25} {:<25}\n".format("Vida media", "Aceptancia S1(N total)", "Acepatancia S2(N total)", "Aceptancia S3(N total)", "Eff trigger S1", "Eff trigger S2", "Eff trigger S3", "N tot S1", "N tot S2", "N tot S3" ))
@@ -244,8 +250,8 @@ with open('datos_eficiencias_{MASS}GeV.txt'.format(MASS = args.MASS), 'w') as te
         
         text.write(f"{vidas_medias[i].split('m')[0]},{N_dxy[i]/N_tot[i]},{N_menor[i]/N_tot[i]},{N_mayor[i]/N_tot[i]},{eff_tS1[i]},{eff_tS2[i]},{eff_tS3[i]},{N_dxy[i]},{N_menor[i]},{N_mayor[i]}\n")
 
-
 print(total_time)
+
 
 # plotsFolder = '/nfs/cms/rhebrero/plots_prueba/trigger_{MASS}Gev/'.format(MASS = args.MASS)
 

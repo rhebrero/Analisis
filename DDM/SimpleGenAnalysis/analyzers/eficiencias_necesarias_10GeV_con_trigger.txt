@@ -1,0 +1,1 @@
+Vida media           Aceptancia S1(N total)         Acepatancia S2(N total)        Aceptancia S3(N total)         Eff trigger S1                 Eff trigger S2            Eff trigger S3            N tot S1                  N tot S2                  N tot S3                 

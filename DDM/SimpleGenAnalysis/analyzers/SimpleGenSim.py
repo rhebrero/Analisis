@@ -23,13 +23,13 @@ from SimpleTools import *
 
 
 #Samples to process
-samplesDir = '/afs/cern.ch/work/e/escalant/private/Displaced2021/CMSSW_12_0_2_patch1/src/'
+samplesDir = '/pnfs/ciemat.es/data/cms/store/user/escalant/'
 
 samples = Sample()
 
-samples.AddSample(samplesDir+'TSG-Run3Summer21DRPremix-HTo2LongLivedTo2mu2jets_MH-125_MFF-20_CTau-130mm_TuneCP5_13TeV_pythia8.root'  , 'M_{H}=125, M_{X}=20, c#tau=130cm'  , '125_20_CTau_130cm', 2)
-samples.AddSample(samplesDir+'TSG-Run3Summer21DRPremix-HTo2LongLivedTo2mu2jets_MH-125_MFF-20_CTau-1300mm_TuneCP5_13TeV_pythia8.root' , 'M_{H}=125, M_{X}=20, c#tau=130cm'  , '125_20_CTau_1300cm', 3)
-samples.AddSample(samplesDir+'TSG-Run3Summer21DRPremix-HTo2LongLivedTo2mu2jets_MH-125_MFF-20_CTau-13000mm_TuneCP5_13TeV_pythia8.root', 'M_{H}=125, M_{X}=20, c#tau=13000cm', '125_20_CTau_13000cm', 1) # last integer is the color
+samples.AddSample(samplesDir+'HTo2LongLivedTo2mu2jets_MH-125_MFF-20_CTau-130mm_TuneCP5_13p6TeV_pythia8/crab_HTo2LongLivedTo2mu2jets_MH-125_MFF-20_CTau-130mm_TuneCP5_13p6TeV_pythia8_GS-October2023_ToDelete/231017_102029/0000/HTo2LongLivedTo2mu2jets_MH-125_MFF-20_CTau-130mm_TuneCP5_13p6TeV_pythia8_GS_1.root'  , 'M_{H}=125, M_{X}=20, c#tau=13cm'  , '125_20_CTau_13cm', 2)
+samples.AddSample(samplesDir+'HTo2LongLivedTo2mu2jets_MH-125_MFF-50_CTau-500mm_TuneCP5_13p6TeV_pythia8/crab_HTo2LongLivedTo2mu2jets_MH-125_MFF-50_CTau-500mm_TuneCP5_13p6TeV_pythia8_GS-October2023_ToDelete/231017_102039/0000/HTo2LongLivedTo2mu2jets_MH-125_MFF-50_CTau-500mm_TuneCP5_13p6TeV_pythia8_GS_1.root' , 'M_{H}=125, M_{X}=50, c#tau=50cm'  , '125_50_CTau_50cm', 3)
+# samples.AddSample(samplesDir+'TSG-Run3Summer21DRPremix-HTo2LongLivedTo2mu2jets_MH-125_MFF-20_CTau-13000mm_TuneCP5_13TeV_pythia8.root', 'M_{H}=125, M_{X}=20, c#tau=13000cm', '125_20_CTau_13000cm', 1) # last integer is the color
 
 sampleName = samples.GetSampleName()
 legendName = samples.GetLegendName()
@@ -41,7 +41,7 @@ labelPruned = ("genParticles")
 
 handleTriggerBits = Handle("edm::TriggerResults")                                                                                                                                                                                                                                                                                                                                                                          
 #labelTriggerBits = ("TriggerResults","","HLT") set my label.
-labelTriggerBits = ("TriggerResults","","HLT") 
+labelTriggerBits = ("TriggerResults", "", "HLT") 
 TriggerFlags = ["HLT_TrkMu15_DoubleTrkMu5NoFiltersNoVtx_v2", "HLT_DoubleMu38NoFiltersNoVtx_v2", "HLT_L2DoubleMu28_NoVertex_2Cha_Angle2p5_Mass10_v2", "DST_DoubleMu3_Mass10_PFScouting_v1", "HLT_L2DoubleMu23_NoVertex_v2"]
 
 #Histograms
@@ -56,9 +56,16 @@ for index, ksamples in enumerate(sampleName):
     for i,event in enumerate(events):   
         event.getByLabel (labelPruned, handlePruned)
         genParticles = handlePruned.product()
-
+        
         event.getByLabel(labelTriggerBits, handleTriggerBits)                                                                                                                                                                                                                                                                                                                                                           
         triggerBits = handleTriggerBits.product()  
+        
+        HLTTriggerNames = event.object().triggerNames(triggerBits)
+        for i in range(triggerBits.size()):
+            if triggerBits.accept(i):        
+                acceptedTrigger = HLTTriggerNames.triggerName(i) 
+                if "HLT_" not in acceptedTrigger: continue # name does not follow usual HLT naming conventions (e.g this exlcudes AlCa, MC, Dataset etc.)
+                print(acceptedTrigger)
 
         for p in genParticles:
             if p.isHardProcess():
@@ -78,7 +85,7 @@ for index, ksamples in enumerate(sampleName):
                 if triggerBits.accept(i):
                     print (HLTTriggerNames.triggerName(i))
 
-plotsFolder = '/afs/cern.ch/work/e/escalant/private/Displaced2021/CMSSW_12_0_2_patch1/src/plots/'
+plotsFolder = '/nfs/cms/rhebrero/plots_prueba'
 #makeSimple1DPlot(var, canvas, samples, title, xtitle, ytitle, output, folder, logy=False, showOnly = []):
 
 makeSimple1DPlot(massHiggs, 'massHiggs', samples, '', 'M_{Higgs}', 'norm.a.u', 'massHiggs', plotsFolder, logy=False)
